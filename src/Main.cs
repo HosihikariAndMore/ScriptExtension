@@ -1,16 +1,17 @@
-﻿using Hosihikari.VanillaScript.Hook;
-using System.Runtime.CompilerServices;
+﻿using Hosihikari.PluginManager;
+using Hosihikari.VanillaScript;
+using Hosihikari.VanillaScript.Hook;
+
+[assembly: EntryPoint<Main>]
 
 namespace Hosihikari.VanillaScript;
 
-public static class Main
+public class Main : IEntryPoint
 {
-#pragma warning disable CA2255
-    [ModuleInitializer]
-#pragma warning restore CA2255
-    public static void Init()
+    public void Initialize(AssemblyPlugin plugin)
     {
         new EnableScriptingHook().Install();
         new Hook.QuickJS.Eval().Install();
+        Assets.Prepare.Init();
     }
 }

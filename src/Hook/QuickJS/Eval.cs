@@ -23,12 +23,19 @@ internal class Eval : HookBase<Eval.HookDelegate>
     public override unsafe HookDelegate HookedFunc =>
         (a1, ctx, contentBytes, size, filenamePtr, evalFlags) =>
         {
-            if (Marshal.PtrToStringUTF8(filenamePtr) is { } filename)
+            try
             {
-                var content = Encoding.UTF8.GetString(contentBytes, (int)size);
-                Log.Logger.Trace(filename);
-                Log.Logger.Trace(content);
-                Log.Logger.Trace(evalFlags.ToString());
+                if (Marshal.PtrToStringUTF8(filenamePtr) is { } filename)
+                {
+                    var content = Encoding.UTF8.GetString(contentBytes, (int)size);
+                    Log.Logger.Trace(filename);
+                    Log.Logger.Trace(content);
+                    Log.Logger.Trace(evalFlags.ToString());
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Logger.Error(nameof(Eval), e);
             }
             return Original(a1, ctx, contentBytes, size, filenamePtr, evalFlags);
         };
