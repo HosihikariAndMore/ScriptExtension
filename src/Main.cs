@@ -11,5 +11,6 @@ public static class Main
     public static void Init()
     {
         new EnableScriptingHook().Install();
+        new Hook.QuickJS.Eval().Install();
     }
 }

@@ -2,13 +2,27 @@
 
 namespace Hosihikari.VanillaScript.QuickJS;
 
+//ref https://github.com/bellard/quickjs/blob/master/quickjs.c#L197
+/*
+ typedef union JSValueUnion {
+    int32_t int32;
+    double float64;
+    void *ptr;
+} JSValueUnion;
+
+typedef struct JSValue {
+    JSValueUnion u;
+    int64_t tag;
+} JSValue;
+ */
 [StructLayout(LayoutKind.Explicit)]
 public ref struct JsValue
 {
     [StructLayout(LayoutKind.Sequential)]
-    internal ref struct JSTagUnion
+    internal ref struct JsTagUnionWithTag
     {
-        private unsafe void* _padding;
+        public int int32;
+        public double float64;
         public JsTag tag;
     }
 
@@ -25,5 +39,6 @@ public ref struct JsValue
     internal unsafe void* ptr;
 
     [FieldOffset(0)]
-    internal JSTagUnion _tagdata;
+    [MarshalAs(UnmanagedType.Struct)]
+    internal JsTagUnionWithTag Data;
 }
