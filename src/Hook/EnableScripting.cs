@@ -1,11 +1,10 @@
 ﻿using Hosihikari.NativeInterop.Hook.ObjectOriented;
 using System.Runtime.InteropServices;
-using static Hosihikari.VanillaScript.Hook.EnableScriptingHook;
 
 namespace Hosihikari.VanillaScript.Hook;
 
 //force enable scripting
-internal class EnableScriptingHook : HookBase<HookDelegate>
+internal class EnableScriptingHook : HookBase<EnableScriptingHook.HookDelegate>
 {
     [return: MarshalAs(UnmanagedType.U1)]
     public unsafe delegate bool HookDelegate(void* @this);

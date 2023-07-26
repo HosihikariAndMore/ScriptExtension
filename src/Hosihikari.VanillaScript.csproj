@@ -9,13 +9,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<Reference Include="Hosihikari.Logging">
+		  <HintPath>..\..\Logging\src\bin\Release\net7.0\Hosihikari.Logging.dll</HintPath>
+		</Reference>
 		<Reference Include="Hosihikari.NativeInterop">
 			<HintPath>..\..\NativeInterop\src\bin\Release\net7.0\Hosihikari.NativeInterop.dll</HintPath>
 		</Reference>
-	</ItemGroup>
-
-	<ItemGroup>
-		<Folder Include="QuickJS\" />
 	</ItemGroup>
 
 </Project>
