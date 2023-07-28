@@ -9,7 +9,7 @@ namespace Hosihikari.VanillaScript.Loader;
 /// <summary>
 /// add js module to JsContext
 /// </summary>
-internal static partial class Manager
+public static partial class Manager
 {
     //usage in js:
     // import { api } from '@hosihikari';

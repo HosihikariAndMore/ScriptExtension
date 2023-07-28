@@ -2,7 +2,7 @@
 
 namespace Hosihikari.VanillaScript.Loader;
 
-internal static partial class Manager
+public static partial class Manager
 {
     private static readonly List<nint> _loadedScriptsContext = new();
 
