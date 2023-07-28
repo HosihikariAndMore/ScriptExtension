@@ -77,4 +77,40 @@ static inline void JS_FreeValue(JSContext *ctx, JSValue v)
     {
         return Native.JS_ToCStringLen2(ctx, @this);
     }
+
+    public static unsafe bool DefineProperty(
+        this JsValue @this,
+        JsContext* ctx,
+        string propertyName,
+        JsValue value,
+        JsPropertyFlags flags = JsPropertyFlags.CWE
+    )
+    {
+        return Native.JS_DefinePropertyValueStr(ctx, @this, propertyName, value, flags);
+    }
+
+    //public static unsafe bool DefineProperty(
+    //    this JsValue @this,
+    //    JsContext* ctx,
+    //    string propertyName,
+    //    string value,
+    //    JsPropertyFlags flags = JsPropertyFlags.CWE
+    //)
+    //{
+    //    return Native.JS_DefinePropertyValueStr(ctx, @this, propertyName, value, flags);
+    //}
+    public static unsafe bool DefineFunction(
+        this JsValue @this,
+        JsContext* ctx,
+        string funcName,
+        delegate* unmanaged<JsContext*, JsValue, int, JsValue*, JsValue> func,
+        int argumentLength,
+        JscFunctionEnum cproto,
+        int magic = 0,
+        JsPropertyFlags flags = JsPropertyFlags.CWE
+    )
+    {
+        var value = Native.JS_NewCFunction2(ctx, func, funcName, argumentLength, cproto, magic);
+        return Native.JS_DefinePropertyValueStr(ctx, @this, funcName, value.Value, flags);
+    }
 }

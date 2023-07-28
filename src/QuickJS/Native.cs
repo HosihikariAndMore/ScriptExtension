@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using System.Text.Json.Nodes;
 using Hosihikari.NativeInterop;
 using Hosihikari.NativeInterop.Utils;
 using Hosihikari.VanillaScript.QuickJS.Exceptions;
@@ -220,5 +221,123 @@ internal static unsafe class Native
     }
 
     private static readonly Lazy<nint> _ptrJsFreeCString = GetPointerLazy("JS_FreeCString");
+    #endregion
+
+    #region JS_SetPropertyFunctionList
+    //ref #L36128
+    //todo
+
+    #endregion
+    #region JS_NewCFunction2
+    //JSValue JS_NewCFunction2(JSContext* ctx, JSCFunction* func,
+    //                     const char* name,
+    //                     int length, JSCFunctionEnum cproto, int magic)
+    //typedef JSValue JSCFunction(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv);
+    public static SafeJsValue JS_NewCFunction2(
+        JsContext* ctx,
+        delegate* unmanaged<JsContext*, JsValue, int, JsValue*, JsValue> func,
+        string name,
+        int argumentLength, //Note: at least 'length' arguments will be readable in 'argv'
+        JscFunctionEnum cproto,
+        int magic
+    )
+    {
+        fixed (byte* ptr = StringUtils.StringToManagedUtf8(name))
+        {
+            var funcPtr = (delegate* unmanaged<
+                JsContext*,
+                delegate* unmanaged<JsContext*, JsValue, int, JsValue*, JsValue>,
+                byte*,
+                int,
+                JscFunctionEnum,
+                int,
+                JsValue>)
+                _ptrJsNewCFunction2.Value;
+            var result = funcPtr(ctx, func, ptr, argumentLength, cproto, magic);
+            if (result.IsException())
+            {
+                throw new QuickJsException(JS_GetException(ctx));
+            }
+            return new SafeJsValue(result, ctx);
+        }
+    }
+
+    private static readonly Lazy<nint> _ptrJsNewCFunction2 = GetPointerLazy("JS_NewCFunction2");
+    #endregion
+    #region JS_NewCFunction3
+    //
+    //todo  JS_NewCFunction3 has protoVal which filled with ctx->function_proto in JS_NewCFunction2
+    ///*
+    // static JSValue JS_NewCFunction3(JSContext *ctx, JSCFunction *func,
+    //                            const char *name,
+    //                            int length, JSCFunctionEnum cproto, int magic,
+    //                            JSValueConst proto_val)
+    // */
+    ////typedef JSValue JSCFunction(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv);
+    //public static JsValue JS_NewCFunction3(
+    //    JsContext* ctx,
+    //    delegate* unmanaged<JsContext*, JsValue, int, JsValue*, JsValue> func,
+    //    string name,
+    //    int length, //Note: at least 'length' arguments will be readable in 'argv'
+    //    JscFunctionEnum cproto,
+    //    int magic,
+    //    JsValue protoVal
+    //)
+    //{
+
+    //}
+
+    #endregion
+    #region JS_GetClassProto
+    //JSValue JS_GetClassProto(JSContext* ctx, JSClassID class_id)
+    //{
+    //    JSRuntime* rt = ctx->rt;
+    //    assert(class_id < rt->class_count);
+    //    return JS_DupValue(ctx, ctx->class_proto[class_id]);
+    //}
+    public static SafeJsValue JS_GetClassProto(JsContext* ctx, JsClassIdEnum classId)
+    {
+        var func = (delegate* unmanaged<JsContext*, JsClassIdEnum, JsValue>)
+            _ptrJsGetClassProto.Value;
+        var result = func(ctx, classId);
+        if (result.IsException())
+        {
+            throw new QuickJsException(JS_GetException(ctx));
+        }
+        //it use JS_DupValue so need to free
+        return new SafeJsValue(result, ctx);
+    }
+
+    private static readonly Lazy<nint> _ptrJsGetClassProto = GetPointerLazy("JS_GetClassProto");
+    #endregion
+
+    #region JS_DefinePropertyValueStr
+    //int JS_DefinePropertyValueStr(JSContext *ctx, JSValueConst this_obj,
+    //                              const char *prop, JSValue val, int flags)
+
+    public static bool JS_DefinePropertyValueStr(
+        JsContext* ctx,
+        JsValue thisObj,
+        string prop,
+        JsValue val,
+        JsPropertyFlags flags
+    )
+    {
+        fixed (byte* ptr = StringUtils.StringToManagedUtf8(prop))
+        {
+            var func = (delegate* unmanaged<JsContext*, JsValue, byte*, JsValue, int, int>)
+                _ptrJsDefinePropertyValueStr.Value;
+            var result = func(ctx, thisObj, ptr, val, (int)flags);
+            if (result == -1)
+            {
+                throw new QuickJsException(JS_GetException(ctx));
+            }
+            return result != 0;
+        }
+    }
+
+    private static readonly Lazy<nint> _ptrJsDefinePropertyValueStr = GetPointerLazy(
+        "JS_DefinePropertyValueStr"
+    );
     #endregion
 }

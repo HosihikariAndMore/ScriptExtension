@@ -1,9 +1,13 @@
 ﻿using System.Runtime.InteropServices;
 using Hosihikari.VanillaScript.QuickJS;
+using Hosihikari.VanillaScript.QuickJS.Extensions;
 using Hosihikari.VanillaScript.QuickJS.Types;
 
 namespace Hosihikari.VanillaScript.Loader;
 
+/// <summary>
+/// add js module to JsContext
+/// </summary>
 internal static partial class Manager
 {
     //usage in js:
@@ -28,6 +32,7 @@ internal static partial class Manager
         try
         {
             var instance = Native.JS_NewObject(ctx);
+            //instance.DefineFunction(ctx,"")
             Native.JS_SetModuleExport(ctx, module, apiModuleName, instance);
         }
         catch (Exception e)
