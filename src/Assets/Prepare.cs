@@ -33,7 +33,7 @@ internal static class Prepare
             var json = JsonNode.Parse(File.ReadAllText(configFile));
             if (json is not null)
             {
-                json["permissions"] = new JsonArray
+                json["allowed_modules"] = new JsonArray
                 {
                     "@minecraft/server-gametest",
                     "@minecraft/server",

@@ -29,7 +29,7 @@ internal static class PackManifest
           ],
           "dependencies": [
             { "module_name": "@minecraft/server-gametest", "version": "1.0.0-beta" },
-            { "module_name": "@minecraft/server", "version": "1.4.0-beta" },
+            { "module_name": "@minecraft/server", "version": "1.5.0-beta" },
             { "module_name": "@minecraft/server-ui", "version": "1.2.0-beta" },
             { "module_name": "@minecraft/server-admin", "version": "1.0.0-beta" },
             { "module_name": "@minecraft/server-net", "version": "1.0.0-beta" }
