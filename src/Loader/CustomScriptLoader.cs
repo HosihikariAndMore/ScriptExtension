@@ -10,8 +10,6 @@ public class ScriptLoadRequestEventArgs : EventArgs, IEnumerable<string>
 {
     private IEnumerable<string> _scriptsPath = Array.Empty<string>();
 
-    public ScriptLoadRequestEventArgs() { }
-
     public void AddScript(string path)
     {
         _scriptsPath = _scriptsPath.Append(path);

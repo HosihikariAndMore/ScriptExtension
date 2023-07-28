@@ -1,10 +1,12 @@
-﻿using Hosihikari.VanillaScript.QuickJS.Types;
+﻿using System.Runtime.InteropServices;
+using Hosihikari.VanillaScript.QuickJS.Types;
+using System.Text.Json.Nodes;
 
-namespace Hosihikari.VanillaScript.QuickJS.Extensions;
+namespace Hosihikari.VanillaScript.QuickJS.Helper;
 
 //todo for create JsValue from int or float ...
 //ref #L505
-internal static class JsValueCreateExtension
+internal static class JsValueCreateHelper
 {
     //#define JS_MKVAL(tag, val) (JSValue){ (JSValueUnion){ .int32 = val }, tag }
     private static JsValue MkVal(JsTag tag, int val)
@@ -34,9 +36,8 @@ internal static class JsValueCreateExtension
 
     //#define JS_MKPTR(tag, p) (JSValue){ (JSValueUnion){ .ptr = p }, tag }
 
-
-
     //#define JS_NAN (JSValue){ .u.float64 = JS_FLOAT64_NAN, JS_TAG_FLOAT64 }
+    public static JsValue Nan => new() { Data = { tag = JsTag.Float64 }, float64 = double.NaN };
 
     //static inline JSValue __JS_NewFloat64(JSContext *ctx, double d)
     //{
@@ -45,6 +46,8 @@ internal static class JsValueCreateExtension
     //    v.u.float64 = d;
     //    return v;
     //}
+    private static JsValue __NewFloat64(double d) =>
+        new() { Data = { tag = JsTag.Float64 }, float64 = d };
 
     //static inline JS_BOOL JS_VALUE_IS_NAN(JSValue v)
     //{
@@ -57,25 +60,28 @@ internal static class JsValueCreateExtension
     //    u.d = v.u.float64;
     //    return (u.u64 & 0x7fffffffffffffff) > 0x7ff0000000000000;
     //}
+    public static bool IsNan(JsValue v)
+    {
+        return v.Data.tag == JsTag.Float64 && (v.uint64 & 0x7fffffffffffffff) > 0x7ff0000000000000;
+    }
 
-
-
-    //private static JsValue NewInt
-    //
     //static js_force_inline JSValue JS_NewBool(JSContext* ctx, JS_BOOL val)
     //{
     //    return JS_MKVAL(JS_TAG_BOOL, (val != 0));
     //}
+    public static JsValue NewBool(bool val) => MkVal(JsTag.Bool, val ? 1 : 0);
 
     //static js_force_inline JSValue JS_NewInt32(JSContext* ctx, int32_t val)
     //{
     //    return JS_MKVAL(JS_TAG_INT, val);
     //}
+    public static JsValue NewInt32(int val) => MkVal(JsTag.Int, val);
 
     //static js_force_inline JSValue JS_NewCatchOffset(JSContext* ctx, int32_t val)
     //{
     //    return JS_MKVAL(JS_TAG_CATCH_OFFSET, val);
     //}
+    public static JsValue NewCatchOffset(int val) => MkVal(JsTag.CatchOffset, val);
 
     //static js_force_inline JSValue JS_NewInt64(JSContext* ctx, int64_t val)
     //{
@@ -90,6 +96,17 @@ internal static class JsValueCreateExtension
     //    }
     //    return v;
     //}
+    public static JsValue NewInt64(long val)
+    {
+        if (val == unchecked((int)val))
+        {
+            return MkVal(JsTag.Int, (int)val);
+        }
+        else
+        {
+            return __NewFloat64(val);
+        }
+    }
 
     //static js_force_inline JSValue JS_NewUint32(JSContext* ctx, uint32_t val)
     //{
@@ -104,8 +121,17 @@ internal static class JsValueCreateExtension
     //    }
     //    return v;
     //}
+    public static JsValue NewUint32(uint val)
+    {
+        if (val <= 0x7fffffff)
+        {
+            return MkVal(JsTag.Int, (int)val);
+        }
+        return __NewFloat64(val);
+    }
 
     //JSValue JS_NewBigInt64(JSContext* ctx, int64_t v);
+
     //JSValue JS_NewBigUint64(JSContext* ctx, uint64_t v);
 
     //static js_force_inline JSValue JS_NewFloat64(JSContext* ctx, double d)
@@ -132,4 +158,25 @@ internal static class JsValueCreateExtension
     //    }
     //    return v;
     //}
+    [StructLayout(LayoutKind.Explicit)]
+    private struct NewFloat64Union
+    {
+        [FieldOffset(0)]
+        public double d;
+
+        [FieldOffset(0)]
+        public ulong u;
+    }
+
+    public static JsValue NewFloat64(double d)
+    {
+        NewFloat64Union u = default;
+        NewFloat64Union t = default;
+        u.d = d;
+        int val = unchecked((int)d);
+        t.d = val;
+        /* -0 cannot be represented as integer, so we compare the bit
+            representation */
+        return u.u == t.u ? MkVal(JsTag.Int, val) : __NewFloat64(d);
+    }
 }
