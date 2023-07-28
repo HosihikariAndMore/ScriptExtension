@@ -12,6 +12,7 @@ internal static partial class Manager
         {
             _loadedScriptsContext.Add((nint)ctx);
             SetupContext(ctx);
+            LoadAllScripts(ctx);
         }
     }
 

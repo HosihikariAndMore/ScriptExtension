@@ -1,5 +1,7 @@
 ﻿using System.Runtime.InteropServices;
+using Hosihikari.Logging;
 using Hosihikari.VanillaScript.QuickJS;
+using Hosihikari.VanillaScript.QuickJS.Extensions;
 using Hosihikari.VanillaScript.QuickJS.Types;
 
 namespace Hosihikari.VanillaScript.Loader;
@@ -31,7 +33,7 @@ internal static partial class Manager
         try
         {
             var instance = Native.JS_NewObject(ctx);
-            //instance.DefineFunction(ctx,"")
+            Modules.TestModule.Bind(ctx, instance);
             Native.JS_SetModuleExport(ctx, module, apiModuleName, instance);
         }
         catch (Exception e)

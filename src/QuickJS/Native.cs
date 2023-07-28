@@ -1,6 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using Hosihikari.NativeInterop;
 using Hosihikari.NativeInterop.Utils;
+using Hosihikari.VanillaScript.Hook.QuickJS;
 using Hosihikari.VanillaScript.QuickJS.Exceptions;
 using Hosihikari.VanillaScript.QuickJS.Extensions;
 using Hosihikari.VanillaScript.QuickJS.Types;
@@ -338,5 +339,30 @@ internal static unsafe class Native
     private static readonly Lazy<nint> _ptrJsDefinePropertyValueStr = GetPointerLazy(
         "JS_DefinePropertyValueStr"
     );
+
+    #endregion
+    #region JS_Eval
+    internal static Eval.HookDelegate JsEvalFunc = null!;
+
+    internal static SafeJsValue JS_Eval(
+        JsContext* ctx,
+        string file,
+        string content,
+        JsEvalFlag flags = JsEvalFlag.TypeModule
+    )
+    {
+        fixed (byte* input = StringUtils.StringToManagedUtf8(content, out var len))
+        fixed (byte* ptrFile = StringUtils.StringToManagedUtf8(file))
+        {
+            var globalObj = JS_GetGlobalObject(ctx);
+            var result = JsEvalFunc(ctx, input, len, (nint)ptrFile, flags, globalObj.Value);
+            if (result.IsException())
+            {
+                throw new QuickJsException(JS_GetException(ctx));
+            }
+
+            return new SafeJsValue(result, ctx);
+        }
+    }
     #endregion
 }

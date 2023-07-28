@@ -102,7 +102,7 @@ static inline void JS_FreeValue(JSContext *ctx, JSValue v)
         string funcName,
         delegate* unmanaged<JsContext*, JsValue, int, JsValue*, JsValue> func,
         int argumentLength,
-        JscFunctionEnum cproto,
+        JscFunctionEnum cproto = JscFunctionEnum.Generic,
         int magic = 0,
         JsPropertyFlags flags = JsPropertyFlags.CWE
     )
