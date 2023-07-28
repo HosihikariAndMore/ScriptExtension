@@ -2,8 +2,8 @@
 
 internal static class PackManifest
 {
-    private const string Uuid = "2fef88eb-05b4-47eb-97a8-67d3d5e8f31c";
-    private const string Data = $$"""
+    internal const string Uuid = "2fef88eb-05b4-47eb-97a8-67d3d5e8f31c";
+    internal const string Data = $$"""
         {
           "format_version": 2,
           "header": {
@@ -24,7 +24,7 @@ internal static class PackManifest
               "language": "javascript",
               "uuid": "8c78f4ed-aa7f-46e8-af4f-cb460e0a3de5",
               "version": [0, 1, 0],
-              "entry": "scripts/121eiqkr.yel.js"
+              "entry": "scripts/main.js"
             }
           ],
           "dependencies": [
