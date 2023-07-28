@@ -1,4 +1,4 @@
-﻿namespace Hosihikari.VanillaScript.QuickJS;
+﻿namespace Hosihikari.VanillaScript.QuickJS.Types;
 
 //ref https://github.com/bellard/quickjs/blob/master/quickjs.c#L302
 [Flags]

@@ -1,7 +1,9 @@
 ﻿using Hosihikari.NativeInterop.Hook.ObjectOriented;
 using System.Runtime.InteropServices;
 using System.Text;
-using Hosihikari.VanillaScript.QuickJS;
+using Hosihikari.NativeInterop.Utils;
+using Hosihikari.VanillaScript.Assets;
+using Hosihikari.VanillaScript.QuickJS.Types;
 
 namespace Hosihikari.VanillaScript.Hook.QuickJS;
 
@@ -30,24 +32,34 @@ internal class Eval : HookBase<Eval.HookDelegate>
         : base("JS_Eval") { }
 
     public override unsafe HookDelegate HookedFunc =>
-        (ctx, contentBytes, size, filenamePtr, evalFlags, jsValue, unknown) =>
+        (ctx, contentBytes, size, file, evalFlags, jsValue, unknown) =>
         {
             try
             {
-                Console.WriteLine("start");
-                Console.WriteLine(unknown);
-                if (Marshal.PtrToStringUTF8(filenamePtr) is { } filename)
+                //if (Marshal.PtrToStringUTF8(filenamePtr) is { } filename)
                 {
                     var content = Encoding.UTF8.GetString(contentBytes, (int)size);
-                    Log.Logger.Trace(filename);
-                    Log.Logger.Trace(content);
-                    Log.Logger.Trace(evalFlags.ToString());
+                    if (content == Prepare.FailedScriptContent)
+                    {
+                        //main script entry point
+                        Loader.Manager.AddContext(ctx);
+                        fixed (
+                            byte* p = StringUtils.StringToManagedUtf8(
+                                Prepare.SuccessScriptContent,
+                                out var len
+                            )
+                        )
+                        {
+                            var ret = Original(ctx, p, len, file, evalFlags, jsValue, unknown);
+                            return ret;
+                        }
+                    }
                 }
             }
             catch (Exception e)
             {
                 Log.Logger.Error(nameof(Eval), e);
             }
-            return Original(ctx, contentBytes, size, filenamePtr, evalFlags, jsValue, unknown);
+            return Original(ctx, contentBytes, size, file, evalFlags, jsValue, unknown);
         };
 }

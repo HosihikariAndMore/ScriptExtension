@@ -5,6 +5,10 @@ namespace Hosihikari.VanillaScript.Assets;
 
 internal static class Prepare
 {
+    public const string SuccessScriptContent = $"console.log('{nameof(VanillaScript)} Loaded !');";
+    public const string FailedScriptContent =
+        $"console.error('{nameof(VanillaScript)} Load Failed !');";
+
     internal static void Init()
     {
         var pack = Path.GetFullPath(Path.Combine("config", nameof(VanillaScript), "pack"));
@@ -16,7 +20,7 @@ internal static class Prepare
             Directory.CreateDirectory(scripts);
         //if (!File.Exists(manifest))
         File.WriteAllText(manifest, PackManifest.Data);
-        File.WriteAllText(Path.Combine(scripts, "main.js"), "'EntryPoint';");
+        File.WriteAllText(Path.Combine(scripts, "main.js"), FailedScriptContent);
         PackHelper.AddPack(
             PackType.BehaviorPack,
             pack,

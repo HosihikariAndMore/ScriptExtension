@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace Hosihikari.VanillaScript.QuickJS;
+namespace Hosihikari.VanillaScript.QuickJS.Types;
 
 //ref https://github.com/bellard/quickjs/blob/master/quickjs.c#L197
 /*
@@ -16,16 +16,16 @@ typedef struct JSValue {
 } JSValue;
  */
 [StructLayout(LayoutKind.Explicit)]
-public ref struct JsValue
+public struct JsValue
 {
     [StructLayout(LayoutKind.Sequential)]
-    internal ref struct JsTagUnionWithTag
+    internal struct JsTagUnionWithTag
     {
-        public int int32;
-        public double float64;
+        public unsafe void* ptr;
         public JsTag tag;
     }
 
+    #region JSValueUnion
     [FieldOffset(0)]
     internal ulong uint64;
 
@@ -37,6 +37,7 @@ public ref struct JsValue
 
     [FieldOffset(0)]
     internal unsafe void* ptr;
+    #endregion
 
     [FieldOffset(0)]
     [MarshalAs(UnmanagedType.Struct)]

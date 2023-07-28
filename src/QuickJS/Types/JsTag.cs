@@ -1,4 +1,4 @@
-﻿namespace Hosihikari.VanillaScript.QuickJS;
+﻿namespace Hosihikari.VanillaScript.QuickJS.Types;
 
 /// <summary>
 /// Represents a type using an internal metadata token.
