@@ -1,5 +1,4 @@
 ﻿using Hosihikari.NativeInterop.Hook.ObjectOriented;
-using System.Runtime.InteropServices;
 using System.Text;
 using Hosihikari.NativeInterop.Utils;
 using Hosihikari.VanillaScript.Assets;

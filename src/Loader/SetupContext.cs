@@ -1,6 +1,5 @@
 ﻿using System.Runtime.InteropServices;
 using Hosihikari.VanillaScript.QuickJS;
-using Hosihikari.VanillaScript.QuickJS.Extensions;
 using Hosihikari.VanillaScript.QuickJS.Types;
 
 namespace Hosihikari.VanillaScript.Loader;

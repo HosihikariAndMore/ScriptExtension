@@ -1,6 +1,4 @@
-﻿using System.Text.Json.Nodes;
-
-namespace Hosihikari.VanillaScript.QuickJS.Types;
+﻿namespace Hosihikari.VanillaScript.QuickJS.Types;
 
 //ref #L773
 public ref struct JsModuleDef

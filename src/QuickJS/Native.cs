@@ -1,5 +1,4 @@
 ﻿using System.Runtime.CompilerServices;
-using System.Text.Json.Nodes;
 using Hosihikari.NativeInterop;
 using Hosihikari.NativeInterop.Utils;
 using Hosihikari.VanillaScript.QuickJS.Exceptions;

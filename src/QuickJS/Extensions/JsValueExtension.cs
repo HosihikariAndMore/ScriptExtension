@@ -1,7 +1,4 @@
 ﻿using System.Runtime.CompilerServices;
-using System.Text.Json.Nodes;
-using System.Xml.Linq;
-using Hosihikari.VanillaScript.Hook.QuickJS;
 using Hosihikari.VanillaScript.QuickJS.Types;
 
 namespace Hosihikari.VanillaScript.QuickJS.Extensions;
