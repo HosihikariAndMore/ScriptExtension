@@ -66,13 +66,13 @@ static inline void JS_FreeValue(JSContext *ctx, JSValue v)
     )
     {
         var val = Native.JS_GetPropertyStr(ctx, @this, propertyName);
-        return Native.JS_ToCStringLen2(ctx, val.Value);
+        return Native.JS_ToCString(ctx, val.Value);
     }
 
     //JS_ToString
     public static unsafe string ToString(this JsValue @this, JsContext* ctx)
     {
-        return Native.JS_ToCStringLen2(ctx, @this);
+        return Native.JS_ToCString(ctx, @this);
     }
 
     public static unsafe bool DefineProperty(
@@ -109,5 +109,10 @@ static inline void JS_FreeValue(JSContext *ctx, JSValue v)
     {
         var value = Native.JS_NewCFunction2(ctx, func, funcName, argumentLength, cproto, magic);
         return Native.JS_DefinePropertyValueStr(ctx, @this, funcName, value.Value, flags);
+    }
+
+    public static unsafe string ToJson(this JsValue @this, JsContext* ctx)
+    {
+        return Native.JS_JSONStringify(ctx, @this);
     }
 }

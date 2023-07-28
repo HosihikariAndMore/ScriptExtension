@@ -179,4 +179,14 @@ internal static class JsValueCreateHelper
             representation */
         return u.u == t.u ? MkVal(JsTag.Int, val) : __NewFloat64(d);
     }
+
+    public static unsafe JsValue NewString(JsContext* ctx, string str)
+    {
+        return Native.JS_NewString(ctx, str);
+    }
+
+    public static unsafe JsValue FromJson(JsContext* ctx, string str)
+    {
+        return Native.JS_ParseJSON(ctx, str);
+    }
 }

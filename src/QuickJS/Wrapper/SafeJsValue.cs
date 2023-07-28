@@ -51,4 +51,12 @@ public class SafeJsValue
             return _value.ToString(_context);
         }
     }
+
+    public string ToJson()
+    {
+        unsafe
+        {
+            return _value.ToString(_context);
+        }
+    }
 }

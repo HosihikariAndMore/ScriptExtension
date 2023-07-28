@@ -4,6 +4,7 @@ using Hosihikari.NativeInterop.Utils;
 using Hosihikari.VanillaScript.Hook.QuickJS;
 using Hosihikari.VanillaScript.QuickJS.Exceptions;
 using Hosihikari.VanillaScript.QuickJS.Extensions;
+using Hosihikari.VanillaScript.QuickJS.Helper;
 using Hosihikari.VanillaScript.QuickJS.Types;
 using Hosihikari.VanillaScript.QuickJS.Wrapper;
 using size_t = System.UIntPtr;
@@ -29,7 +30,6 @@ internal static unsafe class Native
 
     private static readonly Lazy<nint> _jsFreeValue = GetPointerLazy("__JS_FreeValue");
     #endregion
-
     #region JS_GetGlobalObject
     public static SafeJsValue JS_GetGlobalObject(JsContext* ctx)
     {
@@ -43,7 +43,6 @@ internal static unsafe class Native
 
     private static readonly Lazy<nint> _ptrJsGetGlobalObject = GetPointerLazy("JS_GetGlobalObject");
     #endregion
-
     #region JS_NewCModule
     //ref #L27196
     //typedef int JSModuleInitFunc(JSContext *ctx, JSModuleDef *m);
@@ -69,7 +68,6 @@ internal static unsafe class Native
     private static readonly Lazy<nint> _ptrJsNewCModule = GetPointerLazy("JS_NewCModule");
 
     #endregion
-
     #region JS_AddModuleExport
     //ref #L27209
     //int JS_AddModuleExport(JSContext *ctx, JSModuleDef *m, const char *export_name)
@@ -86,7 +84,6 @@ internal static unsafe class Native
 
     private static readonly Lazy<nint> _ptrJsAddModuleExport = GetPointerLazy("JS_AddModuleExport");
     #endregion
-
     #region JS_SetModuleExport
     //ref #L27225
     //int JS_SetModuleExport(JSContext *ctx, JSModuleDef *m, const char *export_name, JSValue val)
@@ -108,34 +105,6 @@ internal static unsafe class Native
 
     private static readonly Lazy<nint> _ptrJsSetModuleExport = GetPointerLazy("JS_SetModuleExport");
     #endregion
-    #region JS_NewObject
-    public static JsValue JS_NewObject(JsContext* ctx)
-    {
-        var func = (delegate* unmanaged<JsContext*, JsValue>)_ptrJsNewObject.Value;
-        //#L4723 JS_NewObjectFromShape
-        // `p->header.ref_count = 1;`
-        // so initial refCount is 1
-        var result = func(ctx);
-        //it seems no need to decrease refCount
-        //because many call such as JS_SetModuleExport will automatic decrease refCount if failed
-        //but if JsValue object is not really used, it should be free manually.
-
-        //process exception
-        //    sh = js_new_shape(ctx, proto);
-        //if (!sh)
-        //    return JS_EXCEPTION;
-
-        if (result.IsException()) //if the return value is exception, indicate that call JS_GetException will get the real exception data
-        {
-            throw new QuickJsException(JS_GetException(ctx));
-        }
-        return result; //new SafeJsValue(*result, ctx);
-    }
-
-    private static readonly Lazy<nint> _ptrJsNewObject = GetPointerLazy("JS_NewObject");
-
-    #endregion
-
     #region JS_GetException
     //ref #L6335
     public static SafeJsValue JS_GetException(JsContext* ctx)
@@ -161,7 +130,6 @@ internal static unsafe class Native
 
     private static readonly Lazy<nint> _ptrJsIsError = GetPointerLazy("JS_IsError");
     #endregion
-
     #region JS_GetPropertyStr
     public static SafeJsValue JS_GetPropertyStr(JsContext* ctx, JsValue @this, string propertyName)
     {
@@ -188,7 +156,7 @@ internal static unsafe class Native
     /// <param name="val"><see cref="JsValue"/> Instance</param>
     /// <param name="cesu8">Determines if non-BMP1 codepoints are encoded as 1 or 2 utf-8 sequences.</param>
     /// <param name="ctx">The context that <see cref="JSValue"/> belongs to.</param>
-    public static string JS_ToCStringLen2(JsContext* ctx, JsValue val, bool cesu8 = true)
+    public static string JS_ToCString(JsContext* ctx, JsValue val, bool cesu8 = true)
     { //ref #L3971
         //const char *JS_ToCStringLen2(JSContext *ctx, size_t *plen, JSValueConst val1, BOOL cesu8)
         var func = (delegate* unmanaged<JsContext*, out size_t, JsValue, int, byte*>)
@@ -212,7 +180,6 @@ internal static unsafe class Native
     private static readonly Lazy<nint> _ptrJsToCStringLen2 = GetPointerLazy("JS_ToCStringLen2");
 
     #endregion
-
     #region JS_FreeCString
     private static void JS_FreeCString(JsContext* ctx, byte* ptr)
     {
@@ -222,11 +189,86 @@ internal static unsafe class Native
 
     private static readonly Lazy<nint> _ptrJsFreeCString = GetPointerLazy("JS_FreeCString");
     #endregion
-
     #region JS_SetPropertyFunctionList
     //ref #L36128
     //todo
 
+    #endregion
+    #region JS_GetClassProto
+    //JSValue JS_GetClassProto(JSContext* ctx, JSClassID class_id)
+    //{
+    //    JSRuntime* rt = ctx->rt;
+    //    assert(class_id < rt->class_count);
+    //    return JS_DupValue(ctx, ctx->class_proto[class_id]);
+    //}
+    public static SafeJsValue JS_GetClassProto(JsContext* ctx, JsClassIdEnum classId)
+    {
+        var func = (delegate* unmanaged<JsContext*, JsClassIdEnum, JsValue>)
+            _ptrJsGetClassProto.Value;
+        var result = func(ctx, classId);
+        if (result.IsException())
+        {
+            throw new QuickJsException(JS_GetException(ctx));
+        }
+        //it use JS_DupValue so need to free
+        return new SafeJsValue(result, ctx);
+    }
+
+    private static readonly Lazy<nint> _ptrJsGetClassProto = GetPointerLazy("JS_GetClassProto");
+    #endregion
+    #region JS_DefinePropertyValueStr
+    //int JS_DefinePropertyValueStr(JSContext *ctx, JSValueConst this_obj,
+    //                              const char *prop, JSValue val, int flags)
+
+    public static bool JS_DefinePropertyValueStr(
+        JsContext* ctx,
+        JsValue thisObj,
+        string prop,
+        JsValue val,
+        JsPropertyFlags flags
+    )
+    {
+        fixed (byte* ptr = StringUtils.StringToManagedUtf8(prop))
+        {
+            var func = (delegate* unmanaged<JsContext*, JsValue, byte*, JsValue, int, int>)
+                _ptrJsDefinePropertyValueStr.Value;
+            var result = func(ctx, thisObj, ptr, val, (int)flags);
+            if (result == -1)
+            {
+                throw new QuickJsException(JS_GetException(ctx));
+            }
+            return result != 0;
+        }
+    }
+
+    private static readonly Lazy<nint> _ptrJsDefinePropertyValueStr = GetPointerLazy(
+        "JS_DefinePropertyValueStr"
+    );
+
+    #endregion
+    #region JS_Eval
+    internal static Eval.HookDelegate JsEvalFunc = null!;
+
+    internal static SafeJsValue JS_Eval(
+        JsContext* ctx,
+        string file,
+        string content,
+        JsEvalFlag flags = JsEvalFlag.TypeModule
+    )
+    {
+        fixed (byte* input = StringUtils.StringToManagedUtf8(content, out var len))
+        fixed (byte* ptrFile = StringUtils.StringToManagedUtf8(file))
+        {
+            var globalObj = JS_GetGlobalObject(ctx);
+            var result = JsEvalFunc(ctx, input, len, (nint)ptrFile, flags, globalObj.Value);
+            if (result.IsException())
+            {
+                throw new QuickJsException(JS_GetException(ctx));
+            }
+
+            return new SafeJsValue(result, ctx);
+        }
+    }
     #endregion
     #region JS_NewCFunction2
     //JSValue JS_NewCFunction2(JSContext* ctx, JSCFunction* func,
@@ -288,81 +330,123 @@ internal static unsafe class Native
     //}
 
     #endregion
-    #region JS_GetClassProto
-    //JSValue JS_GetClassProto(JSContext* ctx, JSClassID class_id)
-    //{
-    //    JSRuntime* rt = ctx->rt;
-    //    assert(class_id < rt->class_count);
-    //    return JS_DupValue(ctx, ctx->class_proto[class_id]);
-    //}
-    public static SafeJsValue JS_GetClassProto(JsContext* ctx, JsClassIdEnum classId)
+    #region JS_NewObject
+    public static JsValue JS_NewObject(JsContext* ctx)
     {
-        var func = (delegate* unmanaged<JsContext*, JsClassIdEnum, JsValue>)
-            _ptrJsGetClassProto.Value;
-        var result = func(ctx, classId);
-        if (result.IsException())
+        var func = (delegate* unmanaged<JsContext*, JsValue>)_ptrJsNewObject.Value;
+        //#L4723 JS_NewObjectFromShape
+        // `p->header.ref_count = 1;`
+        // so initial refCount is 1
+        var result = func(ctx);
+        //it seems no need to decrease refCount
+        //because many call such as JS_SetModuleExport will automatic decrease refCount if failed
+        //but if JsValue object is not really used, it should be free manually.
+
+        //process exception
+        //    sh = js_new_shape(ctx, proto);
+        //if (!sh)
+        //    return JS_EXCEPTION;
+
+        if (result.IsException()) //if the return value is exception, indicate that call JS_GetException will get the real exception data
         {
             throw new QuickJsException(JS_GetException(ctx));
         }
-        //it use JS_DupValue so need to free
-        return new SafeJsValue(result, ctx);
+        return result; //new SafeJsValue(*result, ctx);
     }
 
-    private static readonly Lazy<nint> _ptrJsGetClassProto = GetPointerLazy("JS_GetClassProto");
-    #endregion
-
-    #region JS_DefinePropertyValueStr
-    //int JS_DefinePropertyValueStr(JSContext *ctx, JSValueConst this_obj,
-    //                              const char *prop, JSValue val, int flags)
-
-    public static bool JS_DefinePropertyValueStr(
-        JsContext* ctx,
-        JsValue thisObj,
-        string prop,
-        JsValue val,
-        JsPropertyFlags flags
-    )
-    {
-        fixed (byte* ptr = StringUtils.StringToManagedUtf8(prop))
-        {
-            var func = (delegate* unmanaged<JsContext*, JsValue, byte*, JsValue, int, int>)
-                _ptrJsDefinePropertyValueStr.Value;
-            var result = func(ctx, thisObj, ptr, val, (int)flags);
-            if (result == -1)
-            {
-                throw new QuickJsException(JS_GetException(ctx));
-            }
-            return result != 0;
-        }
-    }
-
-    private static readonly Lazy<nint> _ptrJsDefinePropertyValueStr = GetPointerLazy(
-        "JS_DefinePropertyValueStr"
-    );
+    private static readonly Lazy<nint> _ptrJsNewObject = GetPointerLazy("JS_NewObject");
 
     #endregion
-    #region JS_Eval
-    internal static Eval.HookDelegate JsEvalFunc = null!;
-
-    internal static SafeJsValue JS_Eval(
-        JsContext* ctx,
-        string file,
-        string content,
-        JsEvalFlag flags = JsEvalFlag.TypeModule
-    )
+    #region JS_NewString
+    //JSValue JS_NewStringLen(JSContext *ctx, const char *buf, size_t buf_len)
+    public static JsValue JS_NewString(JsContext* ctx, string str)
     {
-        fixed (byte* input = StringUtils.StringToManagedUtf8(content, out var len))
-        fixed (byte* ptrFile = StringUtils.StringToManagedUtf8(file))
+        fixed (byte* ptr = StringUtils.StringToManagedUtf8(str, out var len))
         {
-            var globalObj = JS_GetGlobalObject(ctx);
-            var result = JsEvalFunc(ctx, input, len, (nint)ptrFile, flags, globalObj.Value);
+            var func = (delegate* unmanaged<JsContext*, byte*, nuint, JsValue>)
+                _ptrJsNewStringLen.Value;
+            var result = func(ctx, ptr, (nuint)len);
             if (result.IsException())
             {
                 throw new QuickJsException(JS_GetException(ctx));
             }
-
-            return new SafeJsValue(result, ctx);
+            return result;
         }
     }
+
+    private static readonly Lazy<nint> _ptrJsNewStringLen = GetPointerLazy("JS_NewStringLen");
+    #endregion
+    #region JS_ParseJSON
+    //JSValue JS_ParseJSON(JSContext *ctx, const char *buf, size_t buf_len,const char* filename, int flags)
+    public static JsValue JS_ParseJSON(JsContext* ctx, string jsonStr, string filename = "<native>")
+    {
+        fixed (byte* ptr = StringUtils.StringToManagedUtf8(jsonStr, out var len))
+        fixed (byte* ptrFile = StringUtils.StringToManagedUtf8(filename))
+        {
+            var func = (delegate* unmanaged<JsContext*, byte*, nuint, byte*, int, JsValue>)
+                _ptrJsParseJson.Value;
+            var result = func(ctx, ptr, (nuint)len, ptrFile, 0);
+            if (result.IsException())
+            {
+                throw new QuickJsException(JS_GetException(ctx));
+            }
+            return result;
+        }
+    }
+
+    private static readonly Lazy<nint> _ptrJsParseJson = GetPointerLazy("JS_ParseJSON");
+    #endregion
+    #region JS_JSONStringify
+    //JSValue JS_JSONStringify(JSContext *ctx, JSValueConst obj,
+    //JSValueConst replacer, JSValueConst space0)
+    public static string JS_JSONStringify(
+        JsContext* ctx,
+        JsValue obj,
+        JsValue? replacer = null,
+        JsValue? space0 = null
+    )
+    {
+        var func = (delegate* unmanaged<JsContext*, JsValue, JsValue, JsValue, JsValue>)
+            _ptrJsJsonStringify.Value;
+        var result = func(
+            ctx,
+            obj,
+            replacer ?? JsValueCreateHelper.Undefined,
+            space0 ?? JsValueCreateHelper.Undefined
+        );
+        if (result.IsException())
+        {
+            throw new QuickJsException(JS_GetException(ctx));
+        }
+        return JS_ToCString(ctx, result);
+    }
+
+    private static readonly Lazy<nint> _ptrJsJsonStringify = GetPointerLazy("JS_JSONStringify");
+    #endregion
+    #region JS_Invoke
+    //JSValue JS_Invoke(JSContext *ctx, JSValueConst this_val,
+    //                  JSAtom atom, int argc, JSValueConst *argv)
+    public static SafeJsValue JS_Invoke(
+        JsContext* ctx,
+        JsValue thisVal,
+        JsAtom atom,
+        int argc,
+        JsValue* argv
+    )
+    {
+        var func = (delegate* unmanaged<JsContext*, JsValue, JsAtom, int, JsValue*, JsValue>)
+            _ptrJsInvoke.Value;
+        var result = func(ctx, thisVal, atom, argc, argv);
+        if (result.IsException())
+        {
+            throw new QuickJsException(JS_GetException(ctx));
+        }
+        return new SafeJsValue(result, ctx);
+    }
+
+    private static readonly Lazy<nint> _ptrJsInvoke = GetPointerLazy("JS_Invoke");
+    #endregion
+    #region __JS_FindAtom
+    //JSAtom __JS_FindAtom(JSContext *ctx, const char *name)
     #endregion
 }

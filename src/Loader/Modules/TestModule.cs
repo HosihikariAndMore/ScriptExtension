@@ -1,4 +1,5 @@
 ﻿using Hosihikari.VanillaScript.QuickJS.Extensions;
+using Hosihikari.VanillaScript.QuickJS.Helper;
 using Hosihikari.VanillaScript.QuickJS.Types;
 using System.Runtime.InteropServices;
 
@@ -17,6 +18,6 @@ internal static unsafe class TestModule
         var argv = new ReadOnlySpan<JsValue>(argvIn, argCount);
         var arg = argv[0];
         Log.Logger.Debug("测试", arg.ToString(ctx));
-        return JsValueCreateExtension.True;
+        return JsValueCreateHelper.True;
     }
 }
