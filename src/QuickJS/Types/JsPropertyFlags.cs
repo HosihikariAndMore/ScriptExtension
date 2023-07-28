@@ -1,5 +1,9 @@
 ﻿namespace Hosihikari.VanillaScript.QuickJS.Types;
 
+/// <summary>
+/// JS_PROP_* flags for object properties.
+/// </summary>
+[Flags]
 public enum JsPropertyFlags
 {
     /// <summary>
