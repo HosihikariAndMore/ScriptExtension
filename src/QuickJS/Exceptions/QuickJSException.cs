@@ -1,7 +1,39 @@
-﻿namespace Hosihikari.VanillaScript.QuickJS.Exceptions;
+﻿using Hosihikari.VanillaScript.QuickJS.Wrapper;
+
+namespace Hosihikari.VanillaScript.QuickJS.Exceptions;
 
 public class QuickJsException : Exception
 {
-    internal QuickJsException(string message)
-        : base(message) { }
+    public override string Message { get; }
+    public string? Name { get; }
+    public string? JsStack { get; }
+
+    internal QuickJsException(SafeJsValue exceptionValue)
+    {
+        if (exceptionValue.IsError())
+        {
+            //error delivered from js Error class
+            Message = exceptionValue.GetStringProperty("message");
+            Name = exceptionValue.GetStringProperty("name");
+            JsStack = exceptionValue.GetStringProperty("stack");
+        }
+        else
+        { //not standard error
+            //just convert to string
+            Message = exceptionValue.ToString();
+        }
+    }
+
+    public override string? StackTrace
+    {
+        get
+        {
+            var originalStackTrace = base.StackTrace;
+            if (JsStack is not null)
+            {
+                return JsStack + Environment.NewLine + originalStackTrace;
+            }
+            return originalStackTrace;
+        }
+    }
 }

@@ -1,10 +1,11 @@
 ﻿using System.Runtime.CompilerServices;
-using System.Text.Json.Nodes;
 using Hosihikari.NativeInterop;
 using Hosihikari.NativeInterop.Utils;
+using Hosihikari.VanillaScript.QuickJS.Exceptions;
 using Hosihikari.VanillaScript.QuickJS.Extensions;
 using Hosihikari.VanillaScript.QuickJS.Types;
 using Hosihikari.VanillaScript.QuickJS.Wrapper;
+using size_t = System.UIntPtr;
 
 namespace Hosihikari.VanillaScript.QuickJS;
 
@@ -123,9 +124,9 @@ internal static unsafe class Native
         //if (!sh)
         //    return JS_EXCEPTION;
 
-        if (result.IsException())
+        if (result.IsException()) //if the return value is exception, indicate that call JS_GetException will get the real exception data
         {
-            var exception = JS_GetException(ctx);
+            throw new QuickJsException(JS_GetException(ctx));
         }
         return result; //new SafeJsValue(*result, ctx);
     }
@@ -148,5 +149,76 @@ internal static unsafe class Native
     }
 
     private static readonly Lazy<nint> _ptrJsGetException = GetPointerLazy("JS_GetException");
+    #endregion
+    #region JS_IsError
+    //JS_BOOL JS_IsError(JSContext *ctx, JSValueConst val);
+    public static bool JS_IsError(JsContext* ctx, JsValue jsValue)
+    {
+        var func = (delegate* unmanaged<JsContext*, JsValue, int>)_ptrJsIsError.Value;
+        return func(ctx, jsValue) != 0;
+    }
+
+    private static readonly Lazy<nint> _ptrJsIsError = GetPointerLazy("JS_IsError");
+    #endregion
+
+    #region JS_GetPropertyStr
+    public static SafeJsValue JS_GetPropertyStr(JsContext* ctx, JsValue @this, string propertyName)
+    {
+        fixed (byte* ptr = StringUtils.StringToManagedUtf8(propertyName))
+        {
+            var func = (delegate* unmanaged<JsContext*, JsValue, byte*, JsValue>)
+                _ptrJsGetPropertyStr.Value;
+            var result = func(ctx, @this, ptr);
+            if (result.IsException())
+            {
+                throw new QuickJsException(JS_GetException(ctx));
+            }
+            return new SafeJsValue(result, ctx);
+        }
+    }
+
+    private static readonly Lazy<nint> _ptrJsGetPropertyStr = GetPointerLazy("JS_GetPropertyStr");
+    #endregion
+    #region JS_ToCStringLen2
+
+    /// <summary>
+    /// Returns a string representation of the value of the current instance.
+    /// </summary>
+    /// <param name="val"><see cref="JsValue"/> Instance</param>
+    /// <param name="cesu8">Determines if non-BMP1 codepoints are encoded as 1 or 2 utf-8 sequences.</param>
+    /// <param name="ctx">The context that <see cref="JSValue"/> belongs to.</param>
+    public static string JS_ToCStringLen2(JsContext* ctx, JsValue val, bool cesu8 = true)
+    { //ref #L3971
+        //const char *JS_ToCStringLen2(JSContext *ctx, size_t *plen, JSValueConst val1, BOOL cesu8)
+        var func = (delegate* unmanaged<JsContext*, out size_t, JsValue, int, byte*>)
+            _ptrJsToCStringLen2.Value;
+        var ptr = func(ctx, out var len, val, cesu8 ? 1 : 0);
+        if (ptr is null)
+        {
+            /* return (NULL, 0) if exception. */
+            throw new QuickJsException(JS_GetException(ctx));
+        }
+        try
+        {
+            return StringUtils.Utf8ToString(new ReadOnlySpan<byte>(ptr, (int)len));
+        }
+        finally
+        { //free the string (pointer stands for JSString)
+            JS_FreeCString(ctx, ptr);
+        }
+    }
+
+    private static readonly Lazy<nint> _ptrJsToCStringLen2 = GetPointerLazy("JS_ToCStringLen2");
+
+    #endregion
+
+    #region JS_FreeCString
+    private static void JS_FreeCString(JsContext* ctx, byte* ptr)
+    {
+        var func = (delegate* unmanaged<JsContext*, byte*, void>)_ptrJsFreeCString.Value;
+        func(ctx, ptr);
+    }
+
+    private static readonly Lazy<nint> _ptrJsFreeCString = GetPointerLazy("JS_FreeCString");
     #endregion
 }

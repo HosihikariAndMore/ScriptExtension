@@ -28,8 +28,7 @@ internal static partial class Manager
         try
         {
             var instance = Native.JS_NewObject(ctx);
-            var jsValue = instance.Value;
-            Native.JS_SetModuleExport(ctx, module, apiModuleName, jsValue);
+            Native.JS_SetModuleExport(ctx, module, apiModuleName, instance);
         }
         catch (Exception e)
         {

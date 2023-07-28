@@ -1,4 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
+using System.Text.Json.Nodes;
+using System.Xml.Linq;
+using Hosihikari.VanillaScript.Hook.QuickJS;
 using Hosihikari.VanillaScript.QuickJS.Types;
 
 namespace Hosihikari.VanillaScript.QuickJS.Extensions;
@@ -56,5 +59,22 @@ static inline void JS_FreeValue(JSContext *ctx, JSValue v)
                 Native.__JS_FreeValue(ctx, @this);
             }
         }
+    }
+
+    //GetStringProperty
+    public static unsafe string GetStringProperty(
+        this JsValue @this,
+        JsContext* ctx,
+        string propertyName
+    )
+    {
+        var val = Native.JS_GetPropertyStr(ctx, @this, propertyName);
+        return Native.JS_ToCStringLen2(ctx, val.Value);
+    }
+
+    //JS_ToString
+    public static unsafe string ToString(this JsValue @this, JsContext* ctx)
+    {
+        return Native.JS_ToCStringLen2(ctx, @this);
     }
 }

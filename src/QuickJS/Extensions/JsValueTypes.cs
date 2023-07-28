@@ -6,6 +6,13 @@ namespace Hosihikari.VanillaScript.QuickJS.Extensions;
 //ref #L556
 public static class JsValueTypes
 {
+    //#define JS_TAG_IS_FLOAT64(tag) ((unsigned)(tag) == JS_TAG_FLOAT64)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsFloat64(this JsTag @this)
+    {
+        return @this is JsTag.Float64;
+    }
+
     //static inline JS_BOOL JS_IsNumber(JSValueConst v)
     //{
     //    int tag = JS_VALUE_GET_TAG(v);
@@ -129,4 +136,14 @@ public static class JsValueTypes
     {
         return @this.Data.tag is JsTag.Object;
     }
+
+    //ref #L9753
+    //BOOL JS_IsError(JSContext* ctx, JSValueConst val)
+    //{
+    //    JSObject* p;
+    //    if (JS_VALUE_GET_TAG(val) != JS_TAG_OBJECT)
+    //        return FALSE;
+    //    p = JS_VALUE_GET_OBJ(val);
+    //    return (p->class_id == JS_CLASS_ERROR);
+    //}
 }
