@@ -14,7 +14,7 @@ public class Main : IEntryPoint
         new EnableScriptingHook().Install();
         var evalHook = new Hook.QuickJS.Eval();
         evalHook.Install();
-        Native.JsEvalFunc = evalHook.OriginalFunc;
+        //Native.JsEvalFunc = evalHook.OriginalFunc;
         Assets.Prepare.Init();
     }
 }

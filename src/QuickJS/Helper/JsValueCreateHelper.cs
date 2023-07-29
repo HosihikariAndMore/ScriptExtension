@@ -1,10 +1,9 @@
 ﻿using System.Runtime.InteropServices;
 using Hosihikari.VanillaScript.QuickJS.Types;
-using System.Text.Json.Nodes;
+using Hosihikari.VanillaScript.QuickJS.Wrapper;
 
 namespace Hosihikari.VanillaScript.QuickJS.Helper;
 
-//todo for create JsValue from int or float ...
 //ref #L505
 internal static class JsValueCreateHelper
 {
@@ -180,13 +179,26 @@ internal static class JsValueCreateHelper
         return u.u == t.u ? MkVal(JsTag.Int, val) : __NewFloat64(d);
     }
 
-    public static unsafe JsValue NewString(JsContext* ctx, string str)
+    /// <summary>
+    ///
+    /// </summary>
+    /// <param name="ctx"></param>
+    /// <param name="str"></param>
+    /// <param name="autoDrop"> whether to decrease ref count when pass out to unmanaged environment </param>
+    public static unsafe AutoDropJsValue NewString(JsContext* ctx, string str, bool autoDrop)
     {
-        return Native.JS_NewString(ctx, str);
+        return Native.JS_NewString(ctx, str, autoDrop);
     }
 
-    public static unsafe JsValue FromJson(JsContext* ctx, string str)
+    /// <summary>
+    ///
+    /// </summary>
+    /// <param name="ctx"></param>
+    /// <param name="str"></param>
+    /// <param name="autoDrop"> whether to decrease ref count when pass out to unmanaged environment </param>
+    /// <returns></returns>
+    public static unsafe AutoDropJsValue FromJson(JsContext* ctx, string str, bool autoDrop)
     {
-        return Native.JS_ParseJSON(ctx, str);
+        return Native.JS_ParseJSON(ctx, str, autoDrop);
     }
 }

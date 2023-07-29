@@ -8,7 +8,7 @@ public class QuickJsException : Exception
     public string? Name { get; }
     public string? JsStack { get; }
 
-    internal QuickJsException(SafeJsValue exceptionValue)
+    internal QuickJsException(AutoDropJsValue exceptionValue)
     {
         if (exceptionValue.IsError())
         {

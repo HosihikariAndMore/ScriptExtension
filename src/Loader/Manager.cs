@@ -6,13 +6,16 @@ public static partial class Manager
 {
     private static readonly List<nint> _loadedScriptsContext = new();
 
-    internal static unsafe void AddContext(JsContext* ctx)
+    internal static unsafe void AddContext(JsContext* ctx, bool isLoaderContext)
     {
         if (!_loadedScriptsContext.Contains((nint)ctx))
         {
             _loadedScriptsContext.Add((nint)ctx);
             SetupContext(ctx);
-            LoadAllScripts(ctx);
+            if (isLoaderContext)
+            {
+                LoadAllScripts(ctx);
+            }
         }
     }
 

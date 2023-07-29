@@ -32,9 +32,9 @@ public static partial class Manager
         //then setup real JSValue for this module
         try
         {
-            var instance = Native.JS_NewObject(ctx);
-            Modules.TestModule.Bind(ctx, instance);
-            Native.JS_SetModuleExport(ctx, module, apiModuleName, instance);
+            using var instance = Native.JS_NewObject(ctx, false);
+            Modules.TestModule.Bind(ctx, instance.Value);
+            Native.JS_SetModuleExport(ctx, module, apiModuleName, instance.Value);
         }
         catch (Exception e)
         {

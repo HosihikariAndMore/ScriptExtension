@@ -1,14 +1,12 @@
 ﻿using System.Runtime.CompilerServices;
-using System.Security;
 using Hosihikari.NativeInterop;
 using Hosihikari.NativeInterop.Utils;
-using Hosihikari.VanillaScript.Hook.QuickJS;
 using Hosihikari.VanillaScript.QuickJS.Exceptions;
 using Hosihikari.VanillaScript.QuickJS.Extensions;
 using Hosihikari.VanillaScript.QuickJS.Helper;
 using Hosihikari.VanillaScript.QuickJS.Types;
 using Hosihikari.VanillaScript.QuickJS.Wrapper;
-using size_t = System.UIntPtr;
+using size_t = nuint;
 
 namespace Hosihikari.VanillaScript.QuickJS;
 
@@ -32,14 +30,14 @@ internal static unsafe class Native
     private static readonly Lazy<nint> _jsFreeValue = GetPointerLazy("__JS_FreeValue");
     #endregion
     #region JS_GetGlobalObject
-    public static SafeJsValue JS_GetGlobalObject(JsContext* ctx)
+    public static AutoDropJsValue JS_GetGlobalObject(JsContext* ctx)
     {
         JsValue ret = new();
         var func = (delegate* unmanaged<JsValue*, JsContext*, JsValue*>)_ptrJsGetGlobalObject.Value;
         //the call will increase refCount
         var result = func(&ret, ctx);
         //return SafeJsValue to auto remove refCount
-        return new SafeJsValue(*result, ctx);
+        return new AutoDropJsValue(*result, ctx);
     }
 
     private static readonly Lazy<nint> _ptrJsGetGlobalObject = GetPointerLazy("JS_GetGlobalObject");
@@ -108,7 +106,7 @@ internal static unsafe class Native
     #endregion
     #region JS_GetException
     //ref #L6335
-    public static SafeJsValue JS_GetException(JsContext* ctx)
+    public static AutoDropJsValue JS_GetException(JsContext* ctx)
     {
         var func = (delegate* unmanaged<JsContext*, JsValue>)_ptrJsGetException.Value;
         var result = func(ctx);
@@ -116,7 +114,7 @@ internal static unsafe class Native
         // the exception is cleared after return.
         // and need to free the exception value if no longer used.
         // so return SafeJsValue to auto remove refCount
-        return new SafeJsValue(result, ctx);
+        return new AutoDropJsValue(result, ctx);
     }
 
     private static readonly Lazy<nint> _ptrJsGetException = GetPointerLazy("JS_GetException");
@@ -132,7 +130,11 @@ internal static unsafe class Native
     private static readonly Lazy<nint> _ptrJsIsError = GetPointerLazy("JS_IsError");
     #endregion
     #region JS_GetPropertyStr
-    public static SafeJsValue JS_GetPropertyStr(JsContext* ctx, JsValue @this, string propertyName)
+    public static AutoDropJsValue JS_GetPropertyStr(
+        JsContext* ctx,
+        JsValue @this,
+        string propertyName
+    )
     {
         fixed (byte* ptr = StringUtils.StringToManagedUtf8(propertyName))
         {
@@ -143,7 +145,7 @@ internal static unsafe class Native
             {
                 throw new QuickJsException(JS_GetException(ctx));
             }
-            return new SafeJsValue(result, ctx);
+            return new AutoDropJsValue(result, ctx);
         }
     }
 
@@ -202,7 +204,7 @@ internal static unsafe class Native
     //    assert(class_id < rt->class_count);
     //    return JS_DupValue(ctx, ctx->class_proto[class_id]);
     //}
-    public static SafeJsValue JS_GetClassProto(JsContext* ctx, JsClassIdEnum classId)
+    public static AutoDropJsValue JS_GetClassProto(JsContext* ctx, JsClassIdEnum classId)
     {
         var func = (delegate* unmanaged<JsContext*, JsClassIdEnum, JsValue>)
             _ptrJsGetClassProto.Value;
@@ -212,7 +214,7 @@ internal static unsafe class Native
             throw new QuickJsException(JS_GetException(ctx));
         }
         //it use JS_DupValue so need to free
-        return new SafeJsValue(result, ctx);
+        return new AutoDropJsValue(result, ctx);
     }
 
     private static readonly Lazy<nint> _ptrJsGetClassProto = GetPointerLazy("JS_GetClassProto");
@@ -248,35 +250,37 @@ internal static unsafe class Native
 
     #endregion
     #region JS_Eval
-    internal static Eval.HookDelegate JsEvalFunc = null!;
-
-    internal static SafeJsValue JS_Eval(
+    //JSValue JS_Eval(JSContext *ctx, const char *input, size_t input_len,
+    //const char* filename, int eval_flags)
+    internal static AutoDropJsValue JS_Eval(
         JsContext* ctx,
         string file,
         string content,
         JsEvalFlag flags = JsEvalFlag.TypeModule
     )
     {
-        fixed (byte* input = StringUtils.StringToManagedUtf8(content, out var len))
-        fixed (byte* ptrFile = StringUtils.StringToManagedUtf8(file))
+        fixed (byte* filePtr = StringUtils.StringToManagedUtf8(file))
+        fixed (byte* contentPtr = StringUtils.StringToManagedUtf8(content))
         {
-            var globalObj = JS_GetGlobalObject(ctx);
-            var result = JsEvalFunc(ctx, input, len, (nint)ptrFile, flags, globalObj.Value);
+            var func = (delegate* unmanaged<JsContext*, byte*, size_t, byte*, int, JsValue>)
+                _ptrJsEval.Value;
+            var result = func(ctx, contentPtr, (size_t)content.Length, filePtr, (int)flags);
             if (result.IsException())
             {
                 throw new QuickJsException(JS_GetException(ctx));
             }
-
-            return new SafeJsValue(result, ctx);
+            return new AutoDropJsValue(result, ctx);
         }
     }
+
+    private static readonly Lazy<nint> _ptrJsEval = GetPointerLazy("JS_Eval");
     #endregion
     #region JS_NewCFunction2
     //JSValue JS_NewCFunction2(JSContext* ctx, JSCFunction* func,
     //                     const char* name,
     //                     int length, JSCFunctionEnum cproto, int magic)
     //typedef JSValue JSCFunction(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv);
-    public static SafeJsValue JS_NewCFunction2(
+    public static AutoDropJsValue JS_NewCFunction2(
         JsContext* ctx,
         delegate* unmanaged<JsContext*, JsValue, int, JsValue*, JsValue> func,
         string name,
@@ -301,7 +305,7 @@ internal static unsafe class Native
             {
                 throw new QuickJsException(JS_GetException(ctx));
             }
-            return new SafeJsValue(result, ctx);
+            return new AutoDropJsValue(result, ctx);
         }
     }
 
@@ -332,35 +336,30 @@ internal static unsafe class Native
 
     #endregion
     #region JS_NewObject
-    public static JsValue JS_NewObject(JsContext* ctx)
+    public static AutoDropJsValue JS_NewObject(JsContext* ctx, bool autoDrop)
     {
         var func = (delegate* unmanaged<JsContext*, JsValue>)_ptrJsNewObject.Value;
         //#L4723 JS_NewObjectFromShape
         // `p->header.ref_count = 1;`
         // so initial refCount is 1
         var result = func(ctx);
-        //it seems no need to decrease refCount
-        //because many call such as JS_SetModuleExport will automatic decrease refCount if failed
-        //but if JsValue object is not really used, it should be free manually.
 
         //process exception
         //    sh = js_new_shape(ctx, proto);
         //if (!sh)
         //    return JS_EXCEPTION;
-
         if (result.IsException()) //if the return value is exception, indicate that call JS_GetException will get the real exception data
         {
             throw new QuickJsException(JS_GetException(ctx));
         }
-        return result; //new SafeJsValue(*result, ctx);
+        return autoDrop ? new AutoDropJsValue(result, ctx) : new SafeJsValue(result, ctx);
     }
 
     private static readonly Lazy<nint> _ptrJsNewObject = GetPointerLazy("JS_NewObject");
-
     #endregion
     #region JS_NewString
     //JSValue JS_NewStringLen(JSContext *ctx, const char *buf, size_t buf_len)
-    public static JsValue JS_NewString(JsContext* ctx, string str)
+    public static AutoDropJsValue JS_NewString(JsContext* ctx, string str, bool autoDrop)
     {
         fixed (byte* ptr = StringUtils.StringToManagedUtf8(str, out var len))
         {
@@ -371,7 +370,7 @@ internal static unsafe class Native
             {
                 throw new QuickJsException(JS_GetException(ctx));
             }
-            return result;
+            return autoDrop ? new AutoDropJsValue(result, ctx) : new SafeJsValue(result, ctx);
         }
     }
 
@@ -379,7 +378,12 @@ internal static unsafe class Native
     #endregion
     #region JS_ParseJSON
     //JSValue JS_ParseJSON(JSContext *ctx, const char *buf, size_t buf_len,const char* filename, int flags)
-    public static JsValue JS_ParseJSON(JsContext* ctx, string jsonStr, string filename = "<native>")
+    public static AutoDropJsValue JS_ParseJSON(
+        JsContext* ctx,
+        string jsonStr,
+        bool autoDrop,
+        string filename = "<native>"
+    )
     {
         fixed (byte* ptr = StringUtils.StringToManagedUtf8(jsonStr, out var len))
         fixed (byte* ptrFile = StringUtils.StringToManagedUtf8(filename))
@@ -391,7 +395,7 @@ internal static unsafe class Native
             {
                 throw new QuickJsException(JS_GetException(ctx));
             }
-            return result;
+            return autoDrop ? new AutoDropJsValue(result, ctx) : new SafeJsValue(result, ctx);
         }
     }
 
@@ -427,7 +431,7 @@ internal static unsafe class Native
     #region JS_Invoke
     //JSValue JS_Invoke(JSContext *ctx, JSValueConst this_val,
     //                  JSAtom atom, int argc, JSValueConst *argv)
-    public static SafeJsValue JS_Invoke(
+    public static AutoDropJsValue JS_Invoke(
         JsContext* ctx,
         JsValue thisVal,
         JsAtom atom,
@@ -442,7 +446,7 @@ internal static unsafe class Native
         {
             throw new QuickJsException(JS_GetException(ctx));
         }
-        return new SafeJsValue(result, ctx);
+        return new AutoDropJsValue(result, ctx);
     }
 
     private static readonly Lazy<nint> _ptrJsInvoke = GetPointerLazy("JS_Invoke");
@@ -450,7 +454,6 @@ internal static unsafe class Native
     #region __JS_FindAtom
     //JSAtom __JS_FindAtom(JSContext *ctx, const char *name)
     #endregion
-
     #region JS_ThrowError
     //static JSValue JS_ThrowError2(JSContext *ctx, JSErrorEnum error_num,
     //                          const char *fmt, va_list ap, BOOL add_backtrace)

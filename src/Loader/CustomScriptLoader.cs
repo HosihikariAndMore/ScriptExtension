@@ -33,7 +33,12 @@ public class ScriptLoadRequestEventArgs : EventArgs, IEnumerable<string>
 
 public class ScriptLoadedEventArgs : EventArgs
 {
-    public ScriptLoadedEventArgs(string path, string relativePath, TimeSpan time, SafeJsValue ret)
+    public ScriptLoadedEventArgs(
+        string path,
+        string relativePath,
+        TimeSpan time,
+        AutoDropJsValue ret
+    )
     {
         Path = path;
         RelativePath = relativePath;
@@ -44,7 +49,7 @@ public class ScriptLoadedEventArgs : EventArgs
     public string Path { get; }
     public string RelativePath { get; }
     public TimeSpan Time { get; }
-    public SafeJsValue Result { get; }
+    public AutoDropJsValue Result { get; }
 }
 
 public static partial class Manager
@@ -62,7 +67,7 @@ public static partial class Manager
             {
                 var bytes = File.ReadAllText(path);
                 var relativePath = Path.GetRelativePath(pluginsDir, path);
-                var ret = Native.JS_Eval(ctx, path, bytes);
+                var ret = Native.JS_Eval(ctx, relativePath, bytes);
                 ScriptLoaded?.Invoke(
                     (nint)ctx,
                     new ScriptLoadedEventArgs(
