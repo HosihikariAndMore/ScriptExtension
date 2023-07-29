@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Hosihikari.NativeInterop;
 using Hosihikari.NativeInterop.Utils;
 using Hosihikari.VanillaScript.QuickJS.Exceptions;
@@ -7,6 +8,7 @@ using Hosihikari.VanillaScript.QuickJS.Helper;
 using Hosihikari.VanillaScript.QuickJS.Types;
 using Hosihikari.VanillaScript.QuickJS.Wrapper;
 using size_t = nuint;
+using JsAtom = System.UInt32;
 
 namespace Hosihikari.VanillaScript.QuickJS;
 
@@ -32,12 +34,11 @@ internal static unsafe class Native
     #region JS_GetGlobalObject
     public static AutoDropJsValue JS_GetGlobalObject(JsContext* ctx)
     {
-        JsValue ret = new();
-        var func = (delegate* unmanaged<JsValue*, JsContext*, JsValue*>)_ptrJsGetGlobalObject.Value;
+        var func = (delegate* unmanaged<JsContext*, JsValue>)_ptrJsGetGlobalObject.Value;
         //the call will increase refCount
-        var result = func(&ret, ctx);
+        var result = func(ctx);
         //return SafeJsValue to auto remove refCount
-        return new AutoDropJsValue(*result, ctx);
+        return new AutoDropJsValue(result, ctx);
     }
 
     private static readonly Lazy<nint> _ptrJsGetGlobalObject = GetPointerLazy("JS_GetGlobalObject");
@@ -286,7 +287,8 @@ internal static unsafe class Native
         string name,
         int argumentLength, //Note: at least 'length' arguments will be readable in 'argv'
         JscFunctionEnum cproto,
-        int magic
+        int magic,
+        bool autoDrop
     )
     {
         fixed (byte* ptr = StringUtils.StringToManagedUtf8(name))
@@ -305,7 +307,7 @@ internal static unsafe class Native
             {
                 throw new QuickJsException(JS_GetException(ctx));
             }
-            return new AutoDropJsValue(result, ctx);
+            return autoDrop ? new AutoDropJsValue(result, ctx) : new SafeJsValue(result, ctx);
         }
     }
 
@@ -488,12 +490,9 @@ internal static unsafe class Native
     {
         return JS_ThrowError(
             ctx,
-            exMessage.Replace(
-                "%",
-                "%%"
-            ) /* prevent format*/
-            ,
+            exMessage.Replace("%", "%%"), /* prevent format*/
             errorType,
+            true,
             __arglist()
         );
     }
@@ -502,6 +501,7 @@ internal static unsafe class Native
         JsContext* ctx,
         string exMessage,
         JsErrorEnum errorType = JsErrorEnum.InternalError,
+        bool addBackTrace = true,
         __arglist
     )
     {
@@ -512,9 +512,10 @@ internal static unsafe class Native
                 JsErrorEnum,
                 byte*,
                 RuntimeArgumentHandle,
+                int,
                 JsValue>)
                 _ptrJsThrowError.Value;
-            var result = func(ctx, errorType, ptr, __arglist);
+            var result = func(ctx, errorType, ptr, __arglist, addBackTrace ? 1 : 0);
             if (!result.IsException())
             {
                 //it seem always return exception type
@@ -525,6 +526,58 @@ internal static unsafe class Native
         }
     }
 
-    private static readonly Lazy<nint> _ptrJsThrowError = GetPointerLazy("JS_ThrowError");
+    private static readonly Lazy<nint> _ptrJsThrowError = GetPointerLazy("JS_ThrowError2");
+    #endregion
+
+    #region JS_GetScriptOrModuleName
+    //JSAtom JS_GetScriptOrModuleName(JSContext *ctx, int n_stack_levels)
+    public static string JS_GetScriptOrModuleName(JsContext* ctx, int nStackLevels)
+    {
+        var func = (delegate* unmanaged<JsContext*, int, JsAtom>)_ptrJsGetScriptOrModuleName.Value;
+        var result = func(ctx, nStackLevels);
+        if (result == JsAtomConst.Null)
+        {
+            return string.Empty;
+        }
+        try
+        {
+            return JS_AtomToCString(ctx, result);
+        }
+        finally
+        {
+            JS_FreeAtom(ctx, result);
+        }
+    }
+
+    private static readonly Lazy<nint> _ptrJsGetScriptOrModuleName = GetPointerLazy(
+        "JS_GetScriptOrModuleName"
+    );
+    #endregion
+
+    #region JS_AtomToCString
+
+    //const char *JS_AtomToCString(JSContext *ctx, JSAtom atom)
+    public static string JS_AtomToCString(JsContext* ctx, JsAtom atom)
+    {
+        var func = (delegate* unmanaged<JsContext*, JsAtom, byte*>)_ptrJsAtomToCString.Value;
+        var result = func(ctx, atom);
+        if (result is null)
+            throw new QuickJsException(JS_GetException(ctx));
+        JS_FreeCString(ctx, result);
+        return Marshal.PtrToStringUTF8((nint)result) ?? string.Empty;
+    }
+
+    private static readonly Lazy<nint> _ptrJsAtomToCString = GetPointerLazy("JS_AtomToCString");
+    #endregion
+    #region JS_FreeAtom
+    //void JS_FreeAtom(JSContext *ctx, JSAtom v)
+    public static void JS_FreeAtom(JsContext* ctx, JsAtom v)
+    {
+        var func = (delegate* unmanaged<JsContext*, JsAtom, void>)_ptrJsFreeAtom.Value;
+        func(ctx, v);
+    }
+
+    private static readonly Lazy<nint> _ptrJsFreeAtom = GetPointerLazy("JS_FreeAtom");
+
     #endregion
 }

@@ -8,6 +8,8 @@ internal static class Config
     internal class ConfigData
     {
         public bool EnableEval { get; set; } = false;
+
+        public bool EnableLogger { get; set; } = true;
     }
 
     internal static ConfigData Data { get; private set; }

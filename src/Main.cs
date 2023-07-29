@@ -15,6 +15,7 @@ public class Main : IEntryPoint
         new Hook.QuickJS.Eval().Install();
         new Hook.QuickJS.FreeContext().Install();
         new Hook.QuickJS.AddIntrinsicBaseObjects().Install();
+        new Hook.JsLog.ContextObjectBindPrint().Install();
         Assets.Prepare.Init();
     }
 }

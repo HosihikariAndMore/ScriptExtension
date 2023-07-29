@@ -1,7 +1,8 @@
 ﻿namespace Hosihikari.VanillaScript.QuickJS.Types;
 
-internal enum JsAtom : uint
+public static class JsAtomConst
 {
+    public const int Null = 0;
     //DEF(null, "null") /* must be first */
     //DEF(false, "false")
     //DEF(true, "true")

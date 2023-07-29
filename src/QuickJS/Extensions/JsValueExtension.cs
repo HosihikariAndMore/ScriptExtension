@@ -65,7 +65,7 @@ public static class JsValueExtension
         string propertyName
     )
     {
-        var val = Native.JS_GetPropertyStr(ctx, @this, propertyName);
+        using var val = Native.JS_GetPropertyStr(ctx, @this, propertyName);
         return Native.JS_ToCString(ctx, val.Value);
     }
 
@@ -104,10 +104,19 @@ public static class JsValueExtension
         int argumentLength,
         JscFunctionEnum cproto = JscFunctionEnum.Generic,
         int magic = 0,
-        JsPropertyFlags flags = JsPropertyFlags.CWE
+        JsPropertyFlags flags = JsPropertyFlags.CWE,
+        bool autoDrop = false
     )
     {
-        var value = Native.JS_NewCFunction2(ctx, func, funcName, argumentLength, cproto, magic);
+        using var value = Native.JS_NewCFunction2(
+            ctx,
+            func,
+            funcName,
+            argumentLength,
+            cproto,
+            magic,
+            autoDrop
+        );
         return Native.JS_DefinePropertyValueStr(ctx, @this, funcName, value.Value, flags);
     }
 

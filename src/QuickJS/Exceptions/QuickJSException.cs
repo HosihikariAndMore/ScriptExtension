@@ -31,6 +31,10 @@ public class QuickJsException : Exception
             var originalStackTrace = base.StackTrace;
             if (JsStack is not null)
             {
+                if (originalStackTrace is null)
+                {
+                    return JsStack;
+                }
                 return JsStack + Environment.NewLine + originalStackTrace;
             }
             return originalStackTrace;

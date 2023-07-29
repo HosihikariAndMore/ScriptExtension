@@ -67,7 +67,7 @@ public static partial class Manager
             {
                 var bytes = File.ReadAllText(path);
                 var relativePath = Path.GetRelativePath(pluginsDir, path);
-                var ret = Native.JS_Eval(ctx, relativePath, bytes);
+                using var ret = Native.JS_Eval(ctx, relativePath, bytes);
                 ScriptLoaded?.Invoke(
                     (nint)ctx,
                     new ScriptLoadedEventArgs(
