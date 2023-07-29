@@ -8,18 +8,22 @@ public static partial class Manager
 
     internal static unsafe void AddContext(JsContext* ctx, bool isLoaderContext)
     {
-        if (!_loadedScriptsContext.Contains((nint)ctx))
+        if (isLoaderContext)
         {
-            _loadedScriptsContext.Add((nint)ctx);
-            SetupContext(ctx);
-            if (isLoaderContext)
+            LoadAllScripts(ctx);
+            if (!_loadedScriptsContext.Contains((nint)ctx))
+                _loadedScriptsContext.Add((nint)ctx);
+        }
+        else
+        {
+            if (!_loadedScriptsContext.Contains((nint)ctx))
             {
-                LoadAllScripts(ctx);
+                _loadedScriptsContext.Add((nint)ctx);
+                SetupContext(ctx);
             }
         }
     }
 
-    //todo impl
     internal static unsafe void FreeContext(JsContext* ctx)
     {
         _loadedScriptsContext.Remove((nint)ctx);

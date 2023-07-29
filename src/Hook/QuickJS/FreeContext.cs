@@ -1,0 +1,26 @@
+﻿using Hosihikari.NativeInterop.Hook.ObjectOriented;
+using Hosihikari.VanillaScript.QuickJS.Types;
+
+namespace Hosihikari.VanillaScript.Hook.QuickJS;
+
+internal class FreeContext : HookBase<FreeContext.HookDelegate>
+{
+    internal unsafe delegate void HookDelegate(JsContext* ctx);
+
+    public FreeContext()
+        : base("JS_FreeContext") { }
+
+    public override unsafe HookDelegate HookedFunc =>
+        ctx =>
+        {
+            //ref #L2278
+            if (--ctx->header.ref_count > 0)
+                return;
+            Log.Logger.Trace(
+                type: "JS_FreeContext",
+                "ctx: " + (nint)ctx + " ctx->refCount: " + ctx->header.ref_count
+            );
+            Loader.Manager.FreeContext(ctx);
+            Original.Invoke(ctx);
+        };
+}

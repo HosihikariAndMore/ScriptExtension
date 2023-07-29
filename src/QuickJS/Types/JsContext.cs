@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 
 namespace Hosihikari.VanillaScript.QuickJS.Types;
 
@@ -6,8 +7,8 @@ namespace Hosihikari.VanillaScript.QuickJS.Types;
 [StructLayout(LayoutKind.Sequential)]
 public ref struct JsContext
 {
-    //JSGCObjectHeader header; /* must come first */
-    //JSRuntime* rt;
+    public JsGCObjectHeader header; /* must come first */
+    public unsafe JsRuntime* rt;
     //struct list_head link;
 
     //uint16_t binary_object_count;

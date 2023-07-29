@@ -4,15 +4,6 @@ using System.Runtime.CompilerServices;
 
 namespace Hosihikari.VanillaScript.QuickJS.Wrapper;
 
-public class SafeJsValue : AutoDropJsValue
-{
-    public unsafe SafeJsValue(JsValue value, JsContext* context)
-        : base(value, context)
-    {
-        value.UnsafeAddRefCount();
-    }
-}
-
 /// <summary>
 /// auto add and remove refCount
 /// </summary>

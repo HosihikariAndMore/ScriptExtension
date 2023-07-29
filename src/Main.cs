@@ -12,9 +12,8 @@ public class Main : IEntryPoint
     public void Initialize(AssemblyPlugin plugin)
     {
         new EnableScriptingHook().Install();
-        var evalHook = new Hook.QuickJS.Eval();
-        evalHook.Install();
-        //Native.JsEvalFunc = evalHook.OriginalFunc;
+        new Hook.QuickJS.Eval().Install();
+        new Hook.QuickJS.FreeContext().Install();
         Assets.Prepare.Init();
     }
 }

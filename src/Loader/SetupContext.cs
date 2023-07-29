@@ -1,7 +1,5 @@
 ﻿using System.Runtime.InteropServices;
-using Hosihikari.Logging;
 using Hosihikari.VanillaScript.QuickJS;
-using Hosihikari.VanillaScript.QuickJS.Extensions;
 using Hosihikari.VanillaScript.QuickJS.Types;
 
 namespace Hosihikari.VanillaScript.Loader;
@@ -13,7 +11,7 @@ public static partial class Manager
 {
     //usage in js:
     // import { api } from '@hosihikari';
-    private const string apiModuleName = "api";
+    private const string ApiModuleName = "api";
 
     internal static unsafe void SetupContext(JsContext* ctx)
     {
@@ -22,7 +20,7 @@ public static partial class Manager
             "@" + nameof(Hosihikari).ToLower(), //module Name
             &JsModuleInitFunc // callback when import this module in js
         );
-        Native.JS_AddModuleExport(ctx, module, apiModuleName);
+        Native.JS_AddModuleExport(ctx, module, ApiModuleName);
     }
 
     [UnmanagedCallersOnly]
@@ -34,7 +32,7 @@ public static partial class Manager
         {
             using var instance = Native.JS_NewObject(ctx, false);
             Modules.TestModule.Bind(ctx, instance.Value);
-            Native.JS_SetModuleExport(ctx, module, apiModuleName, instance.Value);
+            Native.JS_SetModuleExport(ctx, module, ApiModuleName, instance.Value);
         }
         catch (Exception e)
         {

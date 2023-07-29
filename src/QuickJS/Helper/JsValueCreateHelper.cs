@@ -184,7 +184,7 @@ internal static class JsValueCreateHelper
     /// </summary>
     /// <param name="ctx"></param>
     /// <param name="str"></param>
-    /// <param name="autoDrop"> whether to decrease ref count when pass out to unmanaged environment </param>
+    /// <param name="autoDrop"> whether to decrease ref count when pass to unmanaged environment </param>
     public static unsafe AutoDropJsValue NewString(JsContext* ctx, string str, bool autoDrop)
     {
         return Native.JS_NewString(ctx, str, autoDrop);
@@ -195,7 +195,7 @@ internal static class JsValueCreateHelper
     /// </summary>
     /// <param name="ctx"></param>
     /// <param name="str"></param>
-    /// <param name="autoDrop"> whether to decrease ref count when pass out to unmanaged environment </param>
+    /// <param name="autoDrop"> whether to decrease ref count when pass to unmanaged environment </param>
     /// <returns></returns>
     public static unsafe AutoDropJsValue FromJson(JsContext* ctx, string str, bool autoDrop)
     {

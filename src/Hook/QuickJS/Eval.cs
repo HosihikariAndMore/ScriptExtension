@@ -32,19 +32,25 @@ internal class Eval : HookBase<Eval.HookDelegate>
     public override unsafe HookDelegate HookedFunc =>
         (ctx, contentBytes, size, file, evalFlags) =>
         {
-            Log.Logger.Debug(
-                "JS_Eval",
-                "ctx: 0x"
-                    + ((nint)ctx).ToString("X")
-                    + " file: "
-                    + Marshal.PtrToStringUTF8((nint)file)
-            );
             try
             {
-                //if (Marshal.PtrToStringUTF8(filenamePtr) is { } filename)
+                if (Marshal.PtrToStringUTF8((nint)file) is { } filename)
                 {
+                    Log.Logger.Trace(
+                        type: "JS_Eval",
+                        "ctx: 0x"
+                            + ((nint)ctx).ToString("X")
+                            + " ctx->refCount: "
+                            + ctx->header.ref_count
+                            + " file: "
+                            + filename
+                    );
+
                     var content = Encoding.UTF8.GetString(contentBytes, (int)size);
-                    if (content == Prepare.FailedScriptContent) //is script context from build-in loader,not other behavior pack
+                    if (
+                        content == Prepare.FailedScriptContent
+                        && filename == Prepare.EntryPointJsName
+                    ) //is script context from build-in loader,not other behavior pack
                     {
                         //main script entry point
                         Loader.Manager.AddContext(ctx, true); //add context and load all scripts

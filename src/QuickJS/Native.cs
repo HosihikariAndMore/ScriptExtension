@@ -336,6 +336,10 @@ internal static unsafe class Native
 
     #endregion
     #region JS_NewObject
+    /// <summary>
+    /// </summary>
+    /// <param name="ctx"></param>
+    /// <param name="autoDrop"> whether to decrease ref count when released from managed environment </param>
     public static AutoDropJsValue JS_NewObject(JsContext* ctx, bool autoDrop)
     {
         var func = (delegate* unmanaged<JsContext*, JsValue>)_ptrJsNewObject.Value;
@@ -359,6 +363,14 @@ internal static unsafe class Native
     #endregion
     #region JS_NewString
     //JSValue JS_NewStringLen(JSContext *ctx, const char *buf, size_t buf_len)
+    /// <summary>
+    ///
+    /// </summary>
+    /// <param name="ctx"></param>
+    /// <param name="str"></param>
+    /// <param name="autoDrop"> whether to decrease ref count when released from managed environment </param>
+    /// <returns></returns>
+    /// <exception cref="QuickJsException"></exception>
     public static AutoDropJsValue JS_NewString(JsContext* ctx, string str, bool autoDrop)
     {
         fixed (byte* ptr = StringUtils.StringToManagedUtf8(str, out var len))
@@ -378,6 +390,15 @@ internal static unsafe class Native
     #endregion
     #region JS_ParseJSON
     //JSValue JS_ParseJSON(JSContext *ctx, const char *buf, size_t buf_len,const char* filename, int flags)
+    /// <summary>
+    ///
+    /// </summary>
+    /// <param name="ctx"></param>
+    /// <param name="jsonStr"></param>
+    /// <param name="autoDrop"> whether to decrease ref count when released from managed environment </param>
+    /// <param name="filename"></param>
+    /// <returns></returns>
+    /// <exception cref="QuickJsException"></exception>
     public static AutoDropJsValue JS_ParseJSON(
         JsContext* ctx,
         string jsonStr,
