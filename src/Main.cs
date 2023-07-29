@@ -14,6 +14,7 @@ public class Main : IEntryPoint
         new EnableScriptingHook().Install();
         new Hook.QuickJS.Eval().Install();
         new Hook.QuickJS.FreeContext().Install();
+        new Hook.QuickJS.AddIntrinsicBaseObjects().Install();
         Assets.Prepare.Init();
     }
 }

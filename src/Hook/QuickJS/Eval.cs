@@ -45,7 +45,6 @@ internal class Eval : HookBase<Eval.HookDelegate>
                             + " file: "
                             + filename
                     );
-
                     var content = Encoding.UTF8.GetString(contentBytes, (int)size);
                     if (
                         content == Prepare.FailedScriptContent
