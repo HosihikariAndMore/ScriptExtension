@@ -5,8 +5,29 @@ namespace Hosihikari.VanillaScript.QuickJS.Extensions;
 
 public static class JsValueExtension
 {
+    public static int GetRefCount(this JsValue @this)
+    {
+        if (@this.HasRefCount())
+        {
+            unsafe
+            {
+                JsRefCountHeader* p = (JsRefCountHeader*)@this.ptr;
+                return p->RefCount;
+            }
+        }
+
+        return -1;
+    }
+
     //ref #L252
-    private static bool HasRefCount(this JsValue @this) => @this.Data.tag >= JsTag.First;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool HasRefCount(this JsValue @this)
+    {
+        unchecked
+        {
+            return ((uint)@this.Data.tag >= (uint)JsTag.First);
+        }
+    }
 
     //typedef struct JSRefCountHeader
     //{

@@ -15,7 +15,7 @@ public class QuickJsException : Exception
             //error delivered from js Error class
             Message = exceptionValue.GetStringProperty("message");
             Name = exceptionValue.GetStringProperty("name");
-            JsStack = exceptionValue.GetStringProperty("stack");
+            JsStack = exceptionValue.GetStringProperty("stack").TrimEnd();
         }
         else
         { //not standard error

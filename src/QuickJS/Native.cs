@@ -19,6 +19,12 @@ internal static unsafe class Native
         return SymbolHelper.DlsymLazy(symbol);
     }
 
+    private static void ThrowPendingException(JsContext* ctx)
+    {
+        using var ex = JS_GetException(ctx);
+        throw new QuickJsException(ex);
+    }
+
     #region __JS_FreeValue
     /// <summary>
     /// do not call directly !!!
@@ -107,7 +113,7 @@ internal static unsafe class Native
     #endregion
     #region JS_GetException
     //ref #L6335
-    public static AutoDropJsValue JS_GetException(JsContext* ctx)
+    public static SafeJsValue JS_GetException(JsContext* ctx)
     {
         var func = (delegate* unmanaged<JsContext*, JsValue>)_ptrJsGetException.Value;
         var result = func(ctx);
@@ -115,7 +121,7 @@ internal static unsafe class Native
         // the exception is cleared after return.
         // and need to free the exception value if no longer used.
         // so return SafeJsValue to auto remove refCount
-        return new AutoDropJsValue(result, ctx);
+        return new SafeJsValue(result, ctx);
     }
 
     private static readonly Lazy<nint> _ptrJsGetException = GetPointerLazy("JS_GetException");
@@ -144,7 +150,7 @@ internal static unsafe class Native
             var result = func(ctx, @this, ptr);
             if (result.IsException())
             {
-                throw new QuickJsException(JS_GetException(ctx));
+                ThrowPendingException(ctx);
             }
             return new AutoDropJsValue(result, ctx);
         }
@@ -169,7 +175,7 @@ internal static unsafe class Native
         if (ptr is null)
         {
             /* return (NULL, 0) if exception. */
-            throw new QuickJsException(JS_GetException(ctx));
+            ThrowPendingException(ctx);
         }
         try
         {
@@ -212,7 +218,7 @@ internal static unsafe class Native
         var result = func(ctx, classId);
         if (result.IsException())
         {
-            throw new QuickJsException(JS_GetException(ctx));
+            ThrowPendingException(ctx);
         }
         //it use JS_DupValue so need to free
         return new AutoDropJsValue(result, ctx);
@@ -239,7 +245,7 @@ internal static unsafe class Native
             var result = func(ctx, thisObj, ptr, val, (int)flags);
             if (result == -1)
             {
-                throw new QuickJsException(JS_GetException(ctx));
+                ThrowPendingException(ctx);
             }
             return result != 0;
         }
@@ -268,7 +274,7 @@ internal static unsafe class Native
             var result = func(ctx, contentPtr, (size_t)content.Length, filePtr, (int)flags);
             if (result.IsException())
             {
-                throw new QuickJsException(JS_GetException(ctx));
+                ThrowPendingException(ctx);
             }
             return new AutoDropJsValue(result, ctx);
         }
@@ -305,7 +311,7 @@ internal static unsafe class Native
             var result = funcPtr(ctx, func, ptr, argumentLength, cproto, magic);
             if (result.IsException())
             {
-                throw new QuickJsException(JS_GetException(ctx));
+                ThrowPendingException(ctx);
             }
             return autoDrop ? new AutoDropJsValue(result, ctx) : new SafeJsValue(result, ctx);
         }
@@ -356,7 +362,7 @@ internal static unsafe class Native
         //    return JS_EXCEPTION;
         if (result.IsException()) //if the return value is exception, indicate that call JS_GetException will get the real exception data
         {
-            throw new QuickJsException(JS_GetException(ctx));
+            ThrowPendingException(ctx);
         }
         return autoDrop ? new AutoDropJsValue(result, ctx) : new SafeJsValue(result, ctx);
     }
@@ -382,7 +388,7 @@ internal static unsafe class Native
             var result = func(ctx, ptr, (nuint)len);
             if (result.IsException())
             {
-                throw new QuickJsException(JS_GetException(ctx));
+                ThrowPendingException(ctx);
             }
             return autoDrop ? new AutoDropJsValue(result, ctx) : new SafeJsValue(result, ctx);
         }
@@ -416,7 +422,7 @@ internal static unsafe class Native
             var result = func(ctx, ptr, (nuint)len, ptrFile, 0);
             if (result.IsException())
             {
-                throw new QuickJsException(JS_GetException(ctx));
+                ThrowPendingException(ctx);
             }
             return autoDrop ? new AutoDropJsValue(result, ctx) : new SafeJsValue(result, ctx);
         }
@@ -444,7 +450,7 @@ internal static unsafe class Native
         );
         if (result.IsException())
         {
-            throw new QuickJsException(JS_GetException(ctx));
+            ThrowPendingException(ctx);
         }
         return JS_ToCString(ctx, result);
     }
@@ -467,7 +473,7 @@ internal static unsafe class Native
         var result = func(ctx, thisVal, atom, argc, argv);
         if (result.IsException())
         {
-            throw new QuickJsException(JS_GetException(ctx));
+            ThrowPendingException(ctx);
         }
         return new AutoDropJsValue(result, ctx);
     }
@@ -477,45 +483,91 @@ internal static unsafe class Native
     #region __JS_FindAtom
     //JSAtom __JS_FindAtom(JSContext *ctx, const char *name)
     #endregion
-    #region JS_ThrowError
-    //static JSValue JS_ThrowError2(JSContext *ctx, JSErrorEnum error_num,
-    //                          const char *fmt, va_list ap, BOOL add_backtrace)
-    //static JSValue JS_ThrowError(JSContext *ctx, JSErrorEnum error_num,
-    //                         const char *fmt, va_list ap)
-    public static JsValue JS_ThrowError(
-        JsContext* ctx,
-        string exMessage,
-        JsErrorEnum errorType = JsErrorEnum.InternalError
-    )
-    {
-        return JS_ThrowError(
-            ctx,
-            exMessage.Replace("%", "%%"), /* prevent format*/
-            errorType,
-            true,
-            __arglist()
-        );
-    }
+    //#region JS_ThrowError
+    ////static JSValue JS_ThrowError2(JSContext *ctx, JSErrorEnum error_num,
+    ////                          const char *fmt, va_list ap, BOOL add_backtrace)
+    ////static JSValue JS_ThrowError(JSContext *ctx, JSErrorEnum error_num,
+    ////                         const char *fmt, va_list ap)
+    //public static JsValue JS_ThrowError(
+    //    JsContext* ctx,
+    //    string exMessage,
+    //    JsErrorEnum errorType = JsErrorEnum.InternalError
+    //)
+    //{
+    //    return JS_ThrowError(
+    //        ctx,
+    //        exMessage.Replace("%", "%%"), /* prevent format*/
+    //        errorType,
+    //        true
+    //    );
+    //}
 
-    public static JsValue JS_ThrowError(
-        JsContext* ctx,
-        string exMessage,
-        JsErrorEnum errorType = JsErrorEnum.InternalError,
-        bool addBackTrace = true,
-        __arglist
-    )
+    //public static JsValue JS_ThrowError(
+    //    JsContext* ctx,
+    //    string exMessage,
+    //    JsErrorEnum errorType,
+    //    bool addBackTrace
+    //)
+    //{
+    //    fixed (byte* ptr = StringUtils.StringToManagedUtf8(exMessage))
+    //    {
+    //        var func = (delegate* unmanaged<JsContext*, JsErrorEnum, byte*, byte*, int, JsValue>)
+    //            _ptrJsThrowError.Value;
+    //        //var func = Marshal.GetDelegateForFunctionPointer<ThrowErrorDelegate>(
+    //        //    _ptrJsThrowError.Value
+    //        //);
+    //        var result = func(ctx, errorType, ptr, null, addBackTrace ? 1 : 0);
+    //        if (!result.IsException())
+    //        {
+    //            //it seem always return exception type
+    //            //so if not exception, it means throw failed ?
+    //            Log.Logger.Error("throw error may failed");
+    //        }
+    //        return result;
+    //    }
+    //}
+
+    //[StructLayout(LayoutKind.Sequential, Pack = 4)]
+    //struct VaListLinuxX64
+    //{
+    //    //gp_offset The element holds the offset in bytes from reg_save_area to the place where the next available general purpose argument register is saved. In case all argument registers have been exhausted, it is set to the value 48 (6 * 8).
+    //    public uint gp_offset = 6 * 8;
+
+    //    //fp_offset The element holds the offset in bytes from reg_save_area to the place where the next available floating point argument register is saved. In case all argument registers have been exhausted, it is set to the value 304 (6 * 8 + 16 * 16).
+    //    public uint fp_offset = 6 * 8 + 16 * 16;
+
+    //    //overﬂow_arg_area This pointer is used to fetch arguments passed on the stack. It is initialized with the address of the first argument passed on the stack, if any, and then always updated to point to the start of the next argument on the stack.
+    //    public IntPtr overflow_arg_area;
+
+    //    //reg_save_area The element points to the start of the register save area.
+    //    public IntPtr reg_save_area;
+
+    //    public VaListLinuxX64() { }
+    //}
+
+    ////private delegate JsValue ThrowErrorDelegate(
+    ////    JsContext* ctx,
+    ////    JsErrorEnum errorNum,
+    ////    byte* fmt,
+    ////    ArgIterator ap,
+    ////    int addBacktrace
+    ////);
+    //private static readonly Lazy<nint> _ptrJsThrowError = GetPointerLazy("JS_ThrowError2");
+    //#endregion
+
+    #region JS_ThrowInternalError
+    //JSValue __attribute__((format(printf, 2, 3))) JS_ThrowInternalError(JSContext *ctx, const char *fmt, ...);
+
+    public static JsValue JS_ThrowInternalError(JsContext* ctx, string message)
     {
-        fixed (byte* ptr = StringUtils.StringToManagedUtf8(exMessage))
+        var func = (delegate* unmanaged<JsContext*, byte*, JsValue>)_ptrJsThrowInternalError.Value;
+        fixed (
+            byte* ptr = StringUtils.StringToManagedUtf8(
+                message.Replace("%%", "%") /* prevent format*/
+            )
+        )
         {
-            var func = (delegate* unmanaged<
-                JsContext*,
-                JsErrorEnum,
-                byte*,
-                RuntimeArgumentHandle,
-                int,
-                JsValue>)
-                _ptrJsThrowError.Value;
-            var result = func(ctx, errorType, ptr, __arglist, addBackTrace ? 1 : 0);
+            var result = func(ctx, ptr);
             if (!result.IsException())
             {
                 //it seem always return exception type
@@ -526,9 +578,10 @@ internal static unsafe class Native
         }
     }
 
-    private static readonly Lazy<nint> _ptrJsThrowError = GetPointerLazy("JS_ThrowError2");
+    private static readonly Lazy<nint> _ptrJsThrowInternalError = GetPointerLazy(
+        "JS_ThrowInternalError"
+    );
     #endregion
-
     #region JS_GetScriptOrModuleName
     //JSAtom JS_GetScriptOrModuleName(JSContext *ctx, int n_stack_levels)
     public static string JS_GetScriptOrModuleName(JsContext* ctx, int nStackLevels)
@@ -562,7 +615,7 @@ internal static unsafe class Native
         var func = (delegate* unmanaged<JsContext*, JsAtom, byte*>)_ptrJsAtomToCString.Value;
         var result = func(ctx, atom);
         if (result is null)
-            throw new QuickJsException(JS_GetException(ctx));
+            ThrowPendingException(ctx);
         JS_FreeCString(ctx, result);
         return Marshal.PtrToStringUTF8((nint)result) ?? string.Empty;
     }

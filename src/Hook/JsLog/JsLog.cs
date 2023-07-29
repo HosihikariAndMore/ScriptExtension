@@ -136,13 +136,20 @@ internal class JsLog
     {
         try //get full stack from Error
         {
-            Native.JS_ThrowError(ctx, "");
-            var error = Native.JS_GetException(ctx);
+            Native.JS_ThrowInternalError(ctx, "");
+            using var error = Native.JS_GetException(ctx);
+            //error.Value.UnsafeAddRefCount(); //prevent GC ?
+            //using var error2 = Native.JS_GetException(ctx);
+            //Console.WriteLine(error2.Value.Data.tag.ToString());
             var stack = error.Value.GetStringProperty(ctx, "stack");
-            var lines = stack.Split('\n');
-            var file = lines[1].Split(' ')[1];
-            var line = int.Parse(lines[1].Split(' ')[2]);
-            return (file, line);
+            //     at trace (native)
+            //    at <anonymous> (test.js:3)
+            var lineStr = stack.Split('\n')[1]; //at <anonymous> (test.js:3)
+            var source = lineStr[(lineStr.LastIndexOf('(') + 1)..^1]; //test.js:3
+            var data = source.Split(":");
+            if (data.Length > 1)
+                return (data[0], int.Parse(data[1]));
+            return (data[0], -1);
         }
         catch //get only file name from JS_GetScriptOrModuleName
         {

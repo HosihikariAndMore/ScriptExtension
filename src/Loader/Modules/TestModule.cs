@@ -26,7 +26,7 @@ internal static unsafe class TestModule
         }
         catch (Exception ex)
         {
-            return Native.JS_ThrowError(ctx, ex.Message);
+            return Native.JS_ThrowInternalError(ctx, ex.Message);
         }
     }
 }
