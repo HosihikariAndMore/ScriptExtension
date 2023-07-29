@@ -2,6 +2,7 @@
 using Hosihikari.VanillaScript.QuickJS.Helper;
 using Hosihikari.VanillaScript.QuickJS.Types;
 using System.Runtime.InteropServices;
+using Hosihikari.VanillaScript.QuickJS;
 
 namespace Hosihikari.VanillaScript.Loader.Modules;
 
@@ -13,11 +14,18 @@ internal static unsafe class TestModule
     }
 
     [UnmanagedCallersOnly]
-    private static unsafe JsValue test(JsContext* ctx, JsValue val, int argCount, JsValue* argvIn)
+    private static JsValue test(JsContext* ctx, JsValue val, int argCount, JsValue* argvIn)
     {
-        var argv = new ReadOnlySpan<JsValue>(argvIn, argCount);
-        var arg = argv[0];
-        Log.Logger.Debug("测试", arg.ToString(ctx));
-        return JsValueCreateHelper.True;
+        try
+        {
+            var argv = new ReadOnlySpan<JsValue>(argvIn, argCount);
+            var arg = argv[0];
+            Log.Logger.Debug("测试", arg.ToString(ctx));
+            return JsValueCreateHelper.True;
+        }
+        catch (Exception ex)
+        {
+            return Native.JS_ThrowError(ctx, ex.Message);
+        }
     }
 }

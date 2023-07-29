@@ -37,15 +37,15 @@ public static class JsValueExtension
     public static unsafe void UnsafeRemoveRefCount(this JsValue @this, JsContext* ctx)
     { /*
       void __JS_FreeValue(JSContext *ctx, JSValue v);
-static inline void JS_FreeValue(JSContext *ctx, JSValue v)
-{
-    if (JS_VALUE_HAS_REF_COUNT(v)) {
-        JSRefCountHeader *p = (JSRefCountHeader *)JS_VALUE_GET_PTR(v);
-        if (--p->ref_count <= 0) {
-            __JS_FreeValue(ctx, v);
+    static inline void JS_FreeValue(JSContext *ctx, JSValue v)
+    {
+        if (JS_VALUE_HAS_REF_COUNT(v)) {
+            JSRefCountHeader *p = (JSRefCountHeader *)JS_VALUE_GET_PTR(v);
+            if (--p->ref_count <= 0) {
+                __JS_FreeValue(ctx, v);
+            }
         }
     }
-}
       */
         if (@this.HasRefCount())
         {

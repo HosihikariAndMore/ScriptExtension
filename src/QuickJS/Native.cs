@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using System.Security;
 using Hosihikari.NativeInterop;
 using Hosihikari.NativeInterop.Utils;
 using Hosihikari.VanillaScript.Hook.QuickJS;
@@ -448,5 +449,58 @@ internal static unsafe class Native
     #endregion
     #region __JS_FindAtom
     //JSAtom __JS_FindAtom(JSContext *ctx, const char *name)
+    #endregion
+
+    #region JS_ThrowError
+    //static JSValue JS_ThrowError2(JSContext *ctx, JSErrorEnum error_num,
+    //                          const char *fmt, va_list ap, BOOL add_backtrace)
+    //static JSValue JS_ThrowError(JSContext *ctx, JSErrorEnum error_num,
+    //                         const char *fmt, va_list ap)
+    public static JsValue JS_ThrowError(
+        JsContext* ctx,
+        string exMessage,
+        JsErrorEnum errorType = JsErrorEnum.InternalError
+    )
+    {
+        return JS_ThrowError(
+            ctx,
+            exMessage.Replace(
+                "%",
+                "%%"
+            ) /* prevent format*/
+            ,
+            errorType,
+            __arglist()
+        );
+    }
+
+    public static JsValue JS_ThrowError(
+        JsContext* ctx,
+        string exMessage,
+        JsErrorEnum errorType = JsErrorEnum.InternalError,
+        __arglist
+    )
+    {
+        fixed (byte* ptr = StringUtils.StringToManagedUtf8(exMessage))
+        {
+            var func = (delegate* unmanaged<
+                JsContext*,
+                JsErrorEnum,
+                byte*,
+                RuntimeArgumentHandle,
+                JsValue>)
+                _ptrJsThrowError.Value;
+            var result = func(ctx, errorType, ptr, __arglist);
+            if (!result.IsException())
+            {
+                //it seem always return exception type
+                //so if not exception, it means throw failed ?
+                Log.Logger.Error("throw error may failed");
+            }
+            return result;
+        }
+    }
+
+    private static readonly Lazy<nint> _ptrJsThrowError = GetPointerLazy("JS_ThrowError");
     #endregion
 }
