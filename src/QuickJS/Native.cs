@@ -21,7 +21,9 @@ internal static unsafe class Native
 
     private static void ThrowPendingException(JsContext* ctx)
     {
-        using var ex = JS_GetException(ctx);
+        using var ex = JS_GetException(ctx, true);
+        if (ex.Value.IsNull())
+            return;
         throw new QuickJsException(ex);
     }
 
@@ -113,7 +115,7 @@ internal static unsafe class Native
     #endregion
     #region JS_GetException
     //ref #L6335
-    public static SafeJsValue JS_GetException(JsContext* ctx)
+    public static AutoDropJsValue JS_GetException(JsContext* ctx, bool autoDrop)
     {
         var func = (delegate* unmanaged<JsContext*, JsValue>)_ptrJsGetException.Value;
         var result = func(ctx);
@@ -121,7 +123,7 @@ internal static unsafe class Native
         // the exception is cleared after return.
         // and need to free the exception value if no longer used.
         // so return SafeJsValue to auto remove refCount
-        return new SafeJsValue(result, ctx);
+        return autoDrop ? new AutoDropJsValue(result, ctx) : new SafeJsValue(result, ctx);
     }
 
     private static readonly Lazy<nint> _ptrJsGetException = GetPointerLazy("JS_GetException");

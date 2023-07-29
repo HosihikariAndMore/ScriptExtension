@@ -137,8 +137,7 @@ internal class JsLog
         try //get full stack from Error
         {
             Native.JS_ThrowInternalError(ctx, "");
-            using var error = Native.JS_GetException(ctx);
-            //error.Value.UnsafeAddRefCount(); //prevent GC ?
+            using var error = Native.JS_GetException(ctx, false);
             //using var error2 = Native.JS_GetException(ctx);
             //Console.WriteLine(error2.Value.Data.tag.ToString());
             var stack = error.Value.GetStringProperty(ctx, "stack");
