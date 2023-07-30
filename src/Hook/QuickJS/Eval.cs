@@ -58,13 +58,13 @@ internal class Eval : HookBase<Eval.HookDelegate>
                                 out var len
                             )
                         )
-                        fixed (
-                            byte* fakeFile = StringUtils.StringToManagedUtf8(
-                                Guid.NewGuid().ToString("N") + ".js" //replace to fake filename
-                            )
-                        )
+                        //fixed (
+                        //    byte* fakeFileName = StringUtils.StringToManagedUtf8(
+                        //        Guid.NewGuid().ToString("N") + ".js" //replace to fake filename
+                        //    )
+                        //)
                         {
-                            var ret = Original(ctx, p, (nuint)len, fakeFile, evalFlags);
+                            var ret = Original(ctx, p, (nuint)len, file, evalFlags);
                             return ret;
                         }
                     }
