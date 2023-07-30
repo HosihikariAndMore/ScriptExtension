@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.Contracts;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
 using System.Runtime.InteropServices;
 using Hosihikari.VanillaScript.Loader;
 using Hosihikari.VanillaScript.QuickJS.Helper;
@@ -25,6 +26,24 @@ public class JsContextWrapper
     {
         Context = ctx;
         Manager.SetupContext(this);
+    }
+
+    public static bool TryGet(nint ctxPtr, [NotNullWhen(true)] out JsContextWrapper? ctx)
+    {
+        unsafe
+        {
+            if (
+                Manager.LoadedScriptsContext.FirstOrDefault(x => x.Context == ctxPtr.ToPointer()) is
+                { } oldCtx
+            )
+            {
+                ctx = oldCtx;
+                return true;
+            }
+
+            ctx = null;
+            return false;
+        }
     }
 
     public static unsafe JsContextWrapper FetchOrCreate(JsContext* ctx)

@@ -13,6 +13,8 @@ internal class FreeContext : HookBase<FreeContext.HookDelegate>
     public override unsafe HookDelegate HookedFunc =>
         ctx =>
         {
+            if (ctx is null)
+                return;
             //ref #L2278
             if (--ctx->header.ref_count > 0)
                 return;

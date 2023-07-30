@@ -230,4 +230,15 @@ internal static class JsValueCreateHelper
     {
         return Native.JS_NewPromiseCapability(ctx, out resolve, out reject);
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe (
+        AutoDropJsValue promise,
+        SafeJsValue resolve,
+        SafeJsValue reject
+    ) NewPromise(JsContext* ctx)
+    {
+        var promise = Native.JS_NewPromiseCapability(ctx, out var resolve, out var reject);
+        return (promise, resolve, reject);
+    }
 }
