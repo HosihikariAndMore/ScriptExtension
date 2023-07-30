@@ -3,6 +3,7 @@
 public static class JsAtomConst
 {
     public const int Null = 0;
+
     //DEF(null, "null") /* must be first */
     //DEF(false, "false")
     //DEF(true, "true")
@@ -32,7 +33,7 @@ public static class JsAtomConst
     //DEF(function, "function")
     //DEF(debugger, "debugger")
     //DEF(with, "with")
-    ///* FutureReservedWord */
+    // /* FutureReservedWord */
     //DEF(class, "class")
     //DEF(const, "const")
     //DEF(enum, "enum")
@@ -40,7 +41,7 @@ public static class JsAtomConst
     //DEF(extends, "extends")
     //DEF(import, "import")
     //DEF(super, "super")
-    ///* FutureReservedWords when parsing strict mode code */
+    // /* FutureReservedWords when parsing strict mode code */
     //DEF(implements, "implements")
     //DEF(interface, "interface")
     //DEF(let, "let")
@@ -52,17 +53,40 @@ public static class JsAtomConst
     //DEF(yield, "yield")
     //DEF(await, "await")
 
-    ///* empty string */
+    // /* empty string */
     //DEF(empty_string, "")
-    ///* identifiers */
+    // /* identifiers */
     //DEF(length, "length")
     //DEF(fileName, "fileName")
+    public const int FileName = 49;
+
     //DEF(lineNumber, "lineNumber")
+    public const int LineNumber = 50;
+
     //DEF(message, "message")
+    /// <summary>
+    /// from JS_ThrowError2
+    ///
+    ///JS_DefinePropertyValue(ctx, obj, JS_ATOM_message,
+    ///                           JS_NewString(ctx, buf),
+    ///                           JS_PROP_WRITABLE | JS_PROP_CONFIGURABLE);
+    ///
+    /// JS_DefineProperty(a1, v9, v11, /*JS_ATOM_message*/51, v13, v14, 0LL, 3u, 0LL, 3u, 0x2703u);
+    /// </summary>
+    public const int Message = 51;
+
     //DEF(errors, "errors")
+    public const int Errors = 52;
+
     //DEF(stack, "stack")
+    public const int Stack = 53;
+
     //DEF(name, "name")
+    public const int Name = 54;
+
     //DEF(toString, "toString")
+    public const int ToStringFunc = 55;
+
     //DEF(toLocaleString, "toLocaleString")
     //DEF(valueOf, "valueOf")
     //DEF(eval, "eval")
@@ -160,7 +184,7 @@ public static class JsAtomConst
     //DEF(ok, "ok")
     //#endif
     //DEF(toJSON, "toJSON")
-    ///* class names */
+    // /* class names */
     //DEF(Object, "Object")
     //DEF(Array, "Array")
     //DEF(Error, "Error")
@@ -178,7 +202,7 @@ public static class JsAtomConst
     //DEF(RegExp, "RegExp")
     //DEF(ArrayBuffer, "ArrayBuffer")
     //DEF(SharedArrayBuffer, "SharedArrayBuffer")
-    ///* must keep same order as class IDs for typed arrays */
+    // /* must keep same order as class IDs for typed arrays */
     //DEF(Uint8ClampedArray, "Uint8ClampedArray")
     //DEF(Int8Array, "Int8Array")
     //DEF(Uint8Array, "Uint8Array")
@@ -227,9 +251,9 @@ public static class JsAtomConst
     //DEF(TypeError, "TypeError")
     //DEF(URIError, "URIError")
     //DEF(InternalError, "InternalError")
-    ///* private symbols */
+    // /* private symbols */
     //DEF(Private_brand, "<brand>")
-    ///* symbols */
+    // /* symbols */
     //DEF(Symbol_toPrimitive, "Symbol.toPrimitive")
     //DEF(Symbol_iterator, "Symbol.iterator")
     //DEF(Symbol_match, "Symbol.match")

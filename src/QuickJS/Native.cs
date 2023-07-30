@@ -248,6 +248,32 @@ else
 
     private static readonly Lazy<nint> _ptrJsGetClassProto = GetPointerLazy("JS_GetClassProto");
     #endregion
+
+    #region JS_DefinePropertyValue
+    //int JS_DefinePropertyValue(JSContext* ctx, JSValueConst this_obj,
+    //                       JSAtom prop, JSValue val, int flags)
+    public static bool JS_DefinePropertyValue(
+        JsContext* ctx,
+        JsValue thisObj,
+        JsAtom prop,
+        JsValue val,
+        JsPropertyFlags flags
+    )
+    {
+        var func = (delegate* unmanaged<JsContext*, JsValue, JsAtom, JsValue, int, int>)
+            _ptrJsDefinePropertyValue.Value;
+        var result = func(ctx, thisObj, prop, val, (int)flags);
+        if (result == -1)
+        {
+            ThrowPendingException(ctx);
+        }
+        return result == 1;
+    }
+
+    private static readonly Lazy<nint> _ptrJsDefinePropertyValue = GetPointerLazy(
+        "JS_DefinePropertyValue"
+    );
+    #endregion
     #region JS_DefinePropertyValueStr
     //int JS_DefinePropertyValueStr(JSContext *ctx, JSValueConst this_obj,
     //                              const char *prop, JSValue val, int flags)
@@ -269,7 +295,7 @@ else
             {
                 ThrowPendingException(ctx);
             }
-            return result != 0;
+            return result == 1;
         }
     }
 
@@ -363,6 +389,23 @@ else
 
     //}
 
+    #endregion
+
+    #region JS_NewError
+
+    //JSValue JS_NewError(JSContext *ctx)
+    public static AutoDropJsValue JS_NewError(JsContext* ctx)
+    {
+        var func = (delegate* unmanaged<JsContext*, JsValue>)_ptrJsNewError.Value;
+        var result = func(ctx);
+        if (result.IsException())
+        {
+            ThrowPendingException(ctx);
+        }
+        return new AutoDropJsValue(result, ctx);
+    }
+
+    private static readonly Lazy<nint> _ptrJsNewError = GetPointerLazy("JS_NewError");
     #endregion
     #region JS_NewObject
     /// <summary>

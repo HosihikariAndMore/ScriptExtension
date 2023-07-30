@@ -222,6 +222,12 @@ internal static class JsValueCreateHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe AutoDropJsValue NewError(JsContext* ctx)
+    {
+        return Native.JS_NewError(ctx);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe AutoDropJsValue NewPromise(
         JsContext* ctx,
         out SafeJsValue resolve,

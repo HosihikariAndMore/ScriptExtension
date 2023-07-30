@@ -134,6 +134,17 @@ public static class JsValueExtension
         return Native.JS_DefinePropertyValueStr(ctx, @this, propertyName, value, flags);
     }
 
+    public static unsafe bool DefineProperty(
+        this JsValue @this,
+        JsContext* ctx,
+        uint propertyAtom,
+        JsValue value,
+        JsPropertyFlags flags = JsPropertyFlags.CWE
+    )
+    {
+        return Native.JS_DefinePropertyValue(ctx, @this, propertyAtom, value, flags);
+    }
+
     public static unsafe bool DefineFunction(
         this JsValue @this,
         JsContext* ctx,
