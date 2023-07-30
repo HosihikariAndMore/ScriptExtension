@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Diagnostics;
 using Hosihikari.VanillaScript.QuickJS;
+using Hosihikari.VanillaScript.QuickJS.Extensions;
 using Hosihikari.VanillaScript.QuickJS.Types;
 using Hosihikari.VanillaScript.QuickJS.Wrapper;
 
@@ -43,13 +44,13 @@ public class ScriptLoadedEventArgs : EventArgs
         Path = path;
         RelativePath = relativePath;
         Time = time;
-        Result = ret;
+        Result = new SafeJsValue(ret);
     }
 
     public string Path { get; }
     public string RelativePath { get; }
     public TimeSpan Time { get; }
-    public AutoDropJsValue Result { get; }
+    public SafeJsValue Result { get; }
 }
 
 public static partial class Manager

@@ -12,7 +12,7 @@ internal class JsLog
     public static unsafe void Bind(JsContext* ctx, JsValue globalObject)
     {
         using var consoleInstance = Native.JS_NewObject(ctx);
-        var console = consoleInstance.Value;
+        var console = consoleInstance.Steal();
         #region Trace
         console.DefineFunction(ctx, "trace", &PrintTrace, 1, flags: JsPropertyFlags.Normal);
         [UnmanagedCallersOnly]

@@ -78,6 +78,14 @@ public static class JsValueExtension
                 + " refCount:"
                 + @this.GetRefCount()
         );
+#if DEBUG
+        if (!Enum.IsDefined(@this.Tag))
+        {
+            Log.Logger.Error(
+                "tag not define. may already freed by GC. please check." + Environment.StackTrace
+            );
+        }
+#endif
         if (@this.HasRefCount())
         {
             JsRefCountHeader* p = (JsRefCountHeader*)@this.ptr;
@@ -146,7 +154,7 @@ public static class JsValueExtension
             cproto,
             magic
         );
-        return Native.JS_DefinePropertyValueStr(ctx, @this, funcName, value.Value, flags);
+        return Native.JS_DefinePropertyValueStr(ctx, @this, funcName, value.Steal(), flags);
     }
 
     public static unsafe string ToJson(this JsValue @this, JsContext* ctx)

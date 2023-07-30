@@ -10,7 +10,7 @@ namespace Hosihikari.VanillaScript.Hook.QuickJS;
 //ref https://github.com/bellard/quickjs/blob/master/quickjs.c#L33730
 internal class Eval : HookBase<Eval.HookDelegate>
 {
-    internal unsafe delegate JsValue* HookDelegate(
+    internal unsafe delegate JsValue HookDelegate(
         JsContext* ctx,
         byte* input,
         nuint inputLen,

@@ -1,6 +1,7 @@
 ﻿using Hosihikari.VanillaScript.QuickJS.Extensions;
 using Hosihikari.VanillaScript.QuickJS.Types;
 using System.Runtime.CompilerServices;
+using Hosihikari.Minecraft.Extension;
 
 namespace Hosihikari.VanillaScript.QuickJS.Wrapper;
 
@@ -31,7 +32,6 @@ public class AutoDropJsValue : IDisposable
         return ret;
     }
 
-    //bool _disposed = false;
     public void Dispose()
     {
         ReleaseUnmanagedResources();
@@ -43,6 +43,8 @@ public class AutoDropJsValue : IDisposable
         ReleaseUnmanagedResources();
     }
 
+    //bool _disposed = false;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ReleaseUnmanagedResources()
     {
         unsafe
@@ -50,11 +52,21 @@ public class AutoDropJsValue : IDisposable
             //if (_disposed)
             //    return;
             //_disposed = true;
+#if DEBUG
+            //var stack = Environment.StackTrace;
+            //LevelTick.PostTick(() =>
+            //{
+            //Log.Logger.Trace(stack);
+            _value.UnsafeRemoveRefCount(_context);
+            _value = default;
+            //});
+#else
             //todo it seem necessary to post tick to main thread when freeing value
             //ref to JS_FreeAtomStruct, it finally change an array in JSRuntime,
             //so if called in GC thread and call by other in the same time, it might make the array broken ?
             _value.UnsafeRemoveRefCount(_context);
             _value = default; //default int value, no longer use and prevent call __JS_FreeValue
+#endif
         }
     }
 
