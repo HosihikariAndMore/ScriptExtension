@@ -81,7 +81,10 @@ public static partial class Manager
             }
             catch (Exception ex)
             {
-                Log.Logger.Error(nameof(LoadAllScripts), ex);
+                Log.Logger.Error(
+                    nameof(LoadScript) + "('" + Path.GetRelativePath(pluginsDir, path) + "')",
+                    ex
+                );
             }
         }
         if (ScriptLoadRequest is null)

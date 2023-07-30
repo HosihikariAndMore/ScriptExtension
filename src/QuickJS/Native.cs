@@ -275,11 +275,11 @@ internal static unsafe class Native
     )
     {
         fixed (byte* filePtr = StringUtils.StringToManagedUtf8(file))
-        fixed (byte* contentPtr = StringUtils.StringToManagedUtf8(content))
+        fixed (byte* contentPtr = StringUtils.StringToManagedUtf8(content, out var len))
         {
             var func = (delegate* unmanaged<JsContext*, byte*, size_t, byte*, int, JsValue>)
                 _ptrJsEval.Value;
-            var result = func(ctx, contentPtr, (size_t)content.Length, filePtr, (int)flags);
+            var result = func(ctx, contentPtr, (size_t)len, filePtr, (int)flags);
             if (result.IsException())
             {
                 ThrowPendingException(ctx);
