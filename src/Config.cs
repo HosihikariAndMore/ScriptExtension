@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Hosihikari.VanillaScript;
@@ -10,6 +11,16 @@ internal static class Config
         public bool EnableEval { get; set; } = false;
 
         public bool EnableLogger { get; set; } = true;
+
+        public ConfigModules BuildInModules { get; set; } = new();
+    }
+
+    internal class ConfigModules
+    {
+        public const string FileIoModuleName = "@hosihikari/io";
+
+        [JsonPropertyName(FileIoModuleName)]
+        public bool FileIo { get; set; } = true;
     }
 
     internal static ConfigData Data { get; private set; }

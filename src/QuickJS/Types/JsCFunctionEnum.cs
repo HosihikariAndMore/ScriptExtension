@@ -1,7 +1,7 @@
 ﻿namespace Hosihikari.VanillaScript.QuickJS.Types;
 
 /* C function definition */
-public enum JscFunctionEnum
+public enum JsCFunctionEnum
 {
     Generic,
     GenericMagic,

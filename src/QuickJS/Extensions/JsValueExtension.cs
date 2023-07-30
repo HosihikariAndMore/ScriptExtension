@@ -134,23 +134,13 @@ public static class JsValueExtension
         return Native.JS_DefinePropertyValueStr(ctx, @this, propertyName, value, flags);
     }
 
-    //public static unsafe bool DefineProperty(
-    //    this JsValue @this,
-    //    JsContext* ctx,
-    //    string propertyName,
-    //    string value,
-    //    JsPropertyFlags flags = JsPropertyFlags.CWE
-    //)
-    //{
-    //    return Native.JS_DefinePropertyValueStr(ctx, @this, propertyName, value, flags);
-    //}
     public static unsafe bool DefineFunction(
         this JsValue @this,
         JsContext* ctx,
         string funcName,
         delegate* unmanaged<JsContext*, JsValue, int, JsValue*, JsValue> func,
         int argumentLength,
-        JscFunctionEnum cproto = JscFunctionEnum.Generic,
+        JsCFunctionEnum cproto = JsCFunctionEnum.Generic,
         int magic = 0,
         JsPropertyFlags flags = JsPropertyFlags.CWE
     )

@@ -2,7 +2,7 @@
 
 //ref https://github.com/bellard/quickjs/blob/master/quickjs.c#L302
 [Flags]
-internal enum JsEvalFlag : int
+public enum JsEvalFlag : int
 {
     /// <summary>
     /// global code (default)

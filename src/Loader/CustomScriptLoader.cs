@@ -58,7 +58,7 @@ public static partial class Manager
     public static event EventHandler<ScriptLoadRequestEventArgs>? ScriptLoadRequest;
     public static event EventHandler<ScriptLoadedEventArgs>? ScriptLoaded;
 
-    internal static unsafe void LoadAllScripts(JsContext* ctx)
+    internal static unsafe void LoadAllScripts(JsContextWrapper ctx)
     {
         var pluginsDir = Path.GetFullPath("plugins");
         void LoadScript(string path)
@@ -68,9 +68,9 @@ public static partial class Manager
             {
                 var bytes = File.ReadAllText(path);
                 var relativePath = Path.GetRelativePath(pluginsDir, path);
-                using var ret = Native.JS_Eval(ctx, relativePath, bytes);
+                using var ret = ctx.EvalScript(relativePath, bytes);
                 ScriptLoaded?.Invoke(
-                    (nint)ctx,
+                    ctx,
                     new ScriptLoadedEventArgs(
                         path,
                         relativePath,
@@ -100,7 +100,7 @@ public static partial class Manager
         {
             // load script from custom source
             var e = new ScriptLoadRequestEventArgs();
-            ScriptLoadRequest.Invoke((nint)ctx, e);
+            ScriptLoadRequest.Invoke(ctx, e);
             foreach (var js in e)
             {
                 LoadScript(js);

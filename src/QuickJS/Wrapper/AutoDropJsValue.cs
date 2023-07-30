@@ -12,6 +12,16 @@ public class AutoDropJsValue : IDisposable
 {
     private JsValue _value;
     private readonly unsafe JsContext* _context;
+    public JsContextWrapper Context
+    {
+        get
+        {
+            unsafe
+            {
+                return JsContextWrapper.FetchOrCreate(_context);
+            }
+        }
+    }
 
     public unsafe AutoDropJsValue(JsValue value, JsContext* context)
     {
@@ -99,5 +109,43 @@ public class AutoDropJsValue : IDisposable
         {
             return _value.ToString(_context);
         }
+    }
+
+    public void DefineProperty(
+        JsContextWrapper ctx,
+        string exists,
+        AutoDropJsValue value,
+        JsPropertyFlags flags = JsPropertyFlags.Normal
+    )
+    {
+        unsafe
+        {
+            _value.DefineProperty(ctx.Context, exists, value.Steal(), flags);
+        }
+    }
+
+    public unsafe void DefineFunction(
+        JsContextWrapper ctx,
+        string funcName,
+        int argumentLength,
+        delegate* unmanaged<JsContext*, JsValue, int, JsValue*, JsValue> func,
+        JsCFunctionEnum protoType = JsCFunctionEnum.Generic,
+        JsPropertyFlags propFlags = JsPropertyFlags.Normal
+    )
+    {
+        _value.DefineFunction(ctx.Context, funcName, func, argumentLength, protoType, 0, propFlags);
+    }
+
+    public unsafe void DefineFunction(
+        JsContextWrapper ctx,
+        string funcName,
+        int argumentLength,
+        JsNativeFunctionDelegate func,
+        JsCFunctionEnum protoType = JsCFunctionEnum.Generic,
+        JsPropertyFlags propFlags = JsPropertyFlags.Normal
+    )
+    {
+        using var value = ctx.NewJsFunction(funcName, argumentLength, func, protoType);
+        _value.DefineProperty(ctx.Context, funcName, value.Steal(), propFlags);
     }
 }

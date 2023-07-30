@@ -1,7 +1,6 @@
 ﻿using Hosihikari.PluginManager;
 using Hosihikari.VanillaScript;
 using Hosihikari.VanillaScript.Hook;
-using Hosihikari.VanillaScript.QuickJS;
 
 [assembly: EntryPoint<Main>]
 

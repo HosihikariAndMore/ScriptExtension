@@ -85,14 +85,28 @@ internal static unsafe class Native
     #region JS_AddModuleExport
     //ref #L27209
     //int JS_AddModuleExport(JSContext *ctx, JSModuleDef *m, const char *export_name)
-    public static int JS_AddModuleExport(JsContext* ctx, JsModuleDef* module, string exportName)
+    public static void JS_AddModuleExport(JsContext* ctx, JsModuleDef* module, string exportName)
     {
         fixed (byte* ptr = StringUtils.StringToManagedUtf8(exportName))
         {
-            return (
+            var result = (
                 (delegate* unmanaged<JsContext*, JsModuleDef*, byte*, int>)
                     _ptrJsAddModuleExport.Value
             )(ctx, module, ptr);
+
+            /*
+             me = add_export_entry2(ctx, NULL, m, JS_ATOM_NULL, name,
+                       JS_EXPORT_TYPE_LOCAL);
+JS_FreeAtom(ctx, name);
+if (!me)
+    return -1;
+else
+    return 0;
+             */
+            if (result != 0)
+            {
+                ThrowPendingException(ctx);
+            }
         }
     }
 
@@ -300,7 +314,7 @@ internal static unsafe class Native
         delegate* unmanaged<JsContext*, JsValue, int, JsValue*, JsValue> func,
         string name,
         int argumentLength, //Note: at least 'length' arguments will be readable in 'argv'
-        JscFunctionEnum cproto,
+        JsCFunctionEnum cproto,
         int magic
     )
     {
@@ -311,7 +325,7 @@ internal static unsafe class Native
                 delegate* unmanaged<JsContext*, JsValue, int, JsValue*, JsValue>,
                 byte*,
                 int,
-                JscFunctionEnum,
+                JsCFunctionEnum,
                 int,
                 JsValue>)
                 _ptrJsNewCFunction2.Value;
@@ -563,6 +577,11 @@ internal static unsafe class Native
 
     #region JS_ThrowInternalError
     //JSValue __attribute__((format(printf, 2, 3))) JS_ThrowInternalError(JSContext *ctx, const char *fmt, ...);
+
+    public static JsValue JS_ThrowInternalError(JsContext* ctx, Exception exception)
+    {
+        return JS_ThrowInternalError(ctx, exception.ToString());
+    }
 
     public static JsValue JS_ThrowInternalError(JsContext* ctx, string message)
     {

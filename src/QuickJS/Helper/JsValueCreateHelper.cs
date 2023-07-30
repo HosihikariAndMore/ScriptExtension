@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Hosihikari.VanillaScript.QuickJS.Types;
 using Hosihikari.VanillaScript.QuickJS.Wrapper;
 
@@ -45,6 +46,7 @@ internal static class JsValueCreateHelper
     //    v.u.float64 = d;
     //    return v;
     //}
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static JsValue __NewFloat64(double d) => new() { Tag = JsTag.Float64, float64 = d };
 
     //static inline JS_BOOL JS_VALUE_IS_NAN(JSValue v)
@@ -58,6 +60,7 @@ internal static class JsValueCreateHelper
     //    u.d = v.u.float64;
     //    return (u.u64 & 0x7fffffffffffffff) > 0x7ff0000000000000;
     //}
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsNan(JsValue v)
     {
         return v.Tag == JsTag.Float64 && (v.uint64 & 0x7fffffffffffffff) > 0x7ff0000000000000;
@@ -67,18 +70,21 @@ internal static class JsValueCreateHelper
     //{
     //    return JS_MKVAL(JS_TAG_BOOL, (val != 0));
     //}
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static JsValue NewBool(bool val) => MkVal(JsTag.Bool, val ? 1 : 0);
 
     //static js_force_inline JSValue JS_NewInt32(JSContext* ctx, int32_t val)
     //{
     //    return JS_MKVAL(JS_TAG_INT, val);
     //}
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static JsValue NewInt32(int val) => MkVal(JsTag.Int, val);
 
     //static js_force_inline JSValue JS_NewCatchOffset(JSContext* ctx, int32_t val)
     //{
     //    return JS_MKVAL(JS_TAG_CATCH_OFFSET, val);
     //}
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static JsValue NewCatchOffset(int val) => MkVal(JsTag.CatchOffset, val);
 
     //static js_force_inline JSValue JS_NewInt64(JSContext* ctx, int64_t val)
@@ -94,6 +100,7 @@ internal static class JsValueCreateHelper
     //    }
     //    return v;
     //}
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static JsValue NewInt64(long val)
     {
         if (val == unchecked((int)val))
@@ -119,6 +126,7 @@ internal static class JsValueCreateHelper
     //    }
     //    return v;
     //}
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static JsValue NewUint32(uint val)
     {
         if (val <= 0x7fffffff)
@@ -166,6 +174,7 @@ internal static class JsValueCreateHelper
         public ulong u;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static JsValue NewFloat64(double d)
     {
         NewFloat64Union u = default;
@@ -184,6 +193,7 @@ internal static class JsValueCreateHelper
     /// <param name="ctx"></param>
     /// <param name="str"></param>
     /// <param name="autoDrop"> whether to decrease ref count when pass to unmanaged environment </param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe AutoDropJsValue NewString(JsContext* ctx, string str)
     {
         return Native.JS_NewString(ctx, str);
@@ -196,8 +206,20 @@ internal static class JsValueCreateHelper
     /// <param name="str"></param>
     /// <param name="autoDrop"> whether to decrease ref count when pass to unmanaged environment </param>
     /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe AutoDropJsValue FromJson(JsContext* ctx, string str)
     {
         return Native.JS_ParseJSON(ctx, str);
+    }
+
+    /// <summary>
+    /// new empty object
+    /// </summary>
+    /// <param name="ctx"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe AutoDropJsValue NewObject(JsContext* ctx)
+    {
+        return Native.JS_NewObject(ctx);
     }
 }
