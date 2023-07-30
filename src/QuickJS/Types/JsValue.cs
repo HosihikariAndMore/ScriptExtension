@@ -18,12 +18,12 @@ typedef struct JSValue {
 [StructLayout(LayoutKind.Explicit)]
 public struct JsValue
 {
-    [StructLayout(LayoutKind.Sequential)]
-    internal struct JsTagUnionWithTag
-    {
-        public unsafe void* ptr;
-        public JsTag tag;
-    }
+    //[StructLayout(LayoutKind.Sequential)]
+    //internal struct JsTagUnionWithTag
+    //{
+    //    public unsafe void* ptr;
+    //    public JsTag tag;
+    //}
 
     #region JSValueUnion
     [FieldOffset(0)]
@@ -38,8 +38,10 @@ public struct JsValue
     [FieldOffset(0)]
     internal unsafe void* ptr;
     #endregion
+    [FieldOffset(8)]
+    internal JsTag Tag;
 
-    [FieldOffset(0)]
-    [MarshalAs(UnmanagedType.Struct)]
-    internal JsTagUnionWithTag Data;
+    //[FieldOffset(0)]
+    //[MarshalAs(UnmanagedType.Struct)]
+    //internal JsTagUnionWithTag Data;
 }

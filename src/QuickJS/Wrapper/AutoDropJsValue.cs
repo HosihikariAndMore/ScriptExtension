@@ -18,8 +18,20 @@ public class AutoDropJsValue : IDisposable
         _context = context;
     }
 
-    //bool _disposed = false;
+    /// <summary>
+    /// only use to pass the value to JS callback such as JS_NewCFunction
+    /// this method can't be called twice
+    /// the purpose of this method is to prevent the value from being freed, and pass to JS callback then will auto free by JS engine
+    /// </summary>
+    /// <returns></returns>
+    public JsValue Steal()
+    {
+        var ret = _value;
+        _value = default;
+        return ret;
+    }
 
+    //bool _disposed = false;
     public void Dispose()
     {
         ReleaseUnmanagedResources();
@@ -42,6 +54,7 @@ public class AutoDropJsValue : IDisposable
             //ref to JS_FreeAtomStruct, it finally change an array in JSRuntime,
             //so if called in GC thread and call by other in the same time, it might make the array broken ?
             _value.UnsafeRemoveRefCount(_context);
+            _value = default; //default int value, no longer use and prevent call __JS_FreeValue
         }
     }
 

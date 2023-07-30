@@ -11,7 +11,7 @@ internal class JsLog
 {
     public static unsafe void Bind(JsContext* ctx, JsValue globalObject)
     {
-        using var consoleInstance = Native.JS_NewObject(ctx, false);
+        using var consoleInstance = Native.JS_NewObject(ctx);
         var console = consoleInstance.Value;
         #region Trace
         console.DefineFunction(ctx, "trace", &PrintTrace, 1, flags: JsPropertyFlags.Normal);
@@ -137,9 +137,7 @@ internal class JsLog
         try //get full stack from Error
         {
             Native.JS_ThrowInternalError(ctx, "");
-            using var error = Native.JS_GetException(ctx, false);
-            //using var error2 = Native.JS_GetException(ctx);
-            //Console.WriteLine(error2.Value.Data.tag.ToString());
+            using var error = Native.JS_GetException(ctx);
             var stack = error.Value.GetStringProperty(ctx, "stack");
             //     at trace (native)
             //    at <anonymous> (test.js:3)
@@ -163,7 +161,7 @@ internal class JsLog
         foreach (var arg in argv)
         {
             sb.Append(arg.ToString(ctx));
-            if (arg.Data.tag == JsTag.Object && Native.JS_IsError(ctx, arg))
+            if (arg.Tag == JsTag.Object && Native.JS_IsError(ctx, arg))
             {
                 sb.AppendLine();
                 sb.AppendLine(arg.GetStringProperty(ctx, "stack"));

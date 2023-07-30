@@ -25,7 +25,7 @@ public static class JsValueExtension
     {
         unchecked
         {
-            return ((uint)@this.Data.tag >= (uint)JsTag.First);
+            return ((uint)@this.Tag >= (uint)JsTag.First);
         }
     }
 
@@ -68,6 +68,16 @@ public static class JsValueExtension
         }
     }
       */
+        Log.Logger.Trace(
+            "UnsafeRemoveRefCount ctx: 0x"
+                + ((nint)ctx).ToString("X")
+                + " tag:"
+                + @this.Tag
+                + " hasRefCount:"
+                + @this.HasRefCount()
+                + " refCount:"
+                + @this.GetRefCount()
+        );
         if (@this.HasRefCount())
         {
             JsRefCountHeader* p = (JsRefCountHeader*)@this.ptr;
@@ -125,8 +135,7 @@ public static class JsValueExtension
         int argumentLength,
         JscFunctionEnum cproto = JscFunctionEnum.Generic,
         int magic = 0,
-        JsPropertyFlags flags = JsPropertyFlags.CWE,
-        bool autoDrop = false
+        JsPropertyFlags flags = JsPropertyFlags.CWE
     )
     {
         using var value = Native.JS_NewCFunction2(
@@ -135,8 +144,7 @@ public static class JsValueExtension
             funcName,
             argumentLength,
             cproto,
-            magic,
-            autoDrop
+            magic
         );
         return Native.JS_DefinePropertyValueStr(ctx, @this, funcName, value.Value, flags);
     }

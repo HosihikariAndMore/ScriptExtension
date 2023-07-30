@@ -21,7 +21,7 @@ internal static unsafe class Native
 
     private static void ThrowPendingException(JsContext* ctx)
     {
-        using var ex = JS_GetException(ctx, true);
+        using var ex = JS_GetException(ctx);
         if (ex.Value.IsNull())
             return;
         throw new QuickJsException(ex);
@@ -34,7 +34,13 @@ internal static unsafe class Native
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void __JS_FreeValue(JsContext* ctx, JsValue jsValue)
     {
-        ((delegate* unmanaged<JsContext*, JsValue*, void>)_jsFreeValue.Value)(ctx, &jsValue);
+        Log.Logger.Trace(
+            "call start __JS_FreeValue ctx: 0x" + ((nint)ctx).ToString("X") + " tag: " + jsValue.Tag
+        );
+        ((delegate* unmanaged<JsContext*, JsValue, void>)_jsFreeValue.Value)(ctx, jsValue);
+        Log.Logger.Trace(
+            "call end __JS_FreeValue ctx: 0x" + ((nint)ctx).ToString("X") + " tag: " + jsValue.Tag
+        );
     }
 
     private static readonly Lazy<nint> _jsFreeValue = GetPointerLazy("__JS_FreeValue");
@@ -115,7 +121,7 @@ internal static unsafe class Native
     #endregion
     #region JS_GetException
     //ref #L6335
-    public static AutoDropJsValue JS_GetException(JsContext* ctx, bool autoDrop)
+    public static AutoDropJsValue JS_GetException(JsContext* ctx)
     {
         var func = (delegate* unmanaged<JsContext*, JsValue>)_ptrJsGetException.Value;
         var result = func(ctx);
@@ -123,7 +129,7 @@ internal static unsafe class Native
         // the exception is cleared after return.
         // and need to free the exception value if no longer used.
         // so return SafeJsValue to auto remove refCount
-        return autoDrop ? new AutoDropJsValue(result, ctx) : new SafeJsValue(result, ctx);
+        return new AutoDropJsValue(result, ctx);
     }
 
     private static readonly Lazy<nint> _ptrJsGetException = GetPointerLazy("JS_GetException");
@@ -295,8 +301,7 @@ internal static unsafe class Native
         string name,
         int argumentLength, //Note: at least 'length' arguments will be readable in 'argv'
         JscFunctionEnum cproto,
-        int magic,
-        bool autoDrop
+        int magic
     )
     {
         fixed (byte* ptr = StringUtils.StringToManagedUtf8(name))
@@ -315,7 +320,7 @@ internal static unsafe class Native
             {
                 ThrowPendingException(ctx);
             }
-            return autoDrop ? new AutoDropJsValue(result, ctx) : new SafeJsValue(result, ctx);
+            return new AutoDropJsValue(result, ctx);
         }
     }
 
@@ -350,7 +355,7 @@ internal static unsafe class Native
     /// </summary>
     /// <param name="ctx"></param>
     /// <param name="autoDrop"> whether to decrease ref count when released from managed environment </param>
-    public static AutoDropJsValue JS_NewObject(JsContext* ctx, bool autoDrop)
+    public static AutoDropJsValue JS_NewObject(JsContext* ctx)
     {
         var func = (delegate* unmanaged<JsContext*, JsValue>)_ptrJsNewObject.Value;
         //#L4723 JS_NewObjectFromShape
@@ -366,7 +371,7 @@ internal static unsafe class Native
         {
             ThrowPendingException(ctx);
         }
-        return autoDrop ? new AutoDropJsValue(result, ctx) : new SafeJsValue(result, ctx);
+        return new AutoDropJsValue(result, ctx);
     }
 
     private static readonly Lazy<nint> _ptrJsNewObject = GetPointerLazy("JS_NewObject");
@@ -381,7 +386,7 @@ internal static unsafe class Native
     /// <param name="autoDrop"> whether to decrease ref count when released from managed environment </param>
     /// <returns></returns>
     /// <exception cref="QuickJsException"></exception>
-    public static AutoDropJsValue JS_NewString(JsContext* ctx, string str, bool autoDrop)
+    public static AutoDropJsValue JS_NewString(JsContext* ctx, string str)
     {
         fixed (byte* ptr = StringUtils.StringToManagedUtf8(str, out var len))
         {
@@ -392,7 +397,7 @@ internal static unsafe class Native
             {
                 ThrowPendingException(ctx);
             }
-            return autoDrop ? new AutoDropJsValue(result, ctx) : new SafeJsValue(result, ctx);
+            return new AutoDropJsValue(result, ctx);
         }
     }
 
@@ -412,7 +417,6 @@ internal static unsafe class Native
     public static AutoDropJsValue JS_ParseJSON(
         JsContext* ctx,
         string jsonStr,
-        bool autoDrop,
         string filename = "<native>"
     )
     {
@@ -426,7 +430,7 @@ internal static unsafe class Native
             {
                 ThrowPendingException(ctx);
             }
-            return autoDrop ? new AutoDropJsValue(result, ctx) : new SafeJsValue(result, ctx);
+            return new AutoDropJsValue(result, ctx);
         }
     }
 

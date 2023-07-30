@@ -21,7 +21,7 @@ public static class JsValueTypes
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsNumber(this JsValue @this)
     {
-        return @this.Data.tag is JsTag.Int or JsTag.Float64;
+        return @this.Tag is JsTag.Int or JsTag.Float64;
     }
 
     //static inline JS_BOOL JS_IsBigInt(JSContext* ctx, JSValueConst v)
@@ -32,7 +32,7 @@ public static class JsValueTypes
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsBigInt(this JsValue @this)
     {
-        return @this.Data.tag is JsTag.BigInt;
+        return @this.Tag is JsTag.BigInt;
     }
 
     //static inline JS_BOOL JS_IsBigFloat(JSValueConst v)
@@ -43,7 +43,7 @@ public static class JsValueTypes
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsBigFloat(this JsValue @this)
     {
-        return @this.Data.tag is JsTag.BigFloat;
+        return @this.Tag is JsTag.BigFloat;
     }
 
     //static inline JS_BOOL JS_IsBigDecimal(JSValueConst v)
@@ -54,7 +54,7 @@ public static class JsValueTypes
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsBigDecimal(this JsValue @this)
     {
-        return @this.Data.tag is JsTag.BigDecimal;
+        return @this.Tag is JsTag.BigDecimal;
     }
 
     //static inline JS_BOOL JS_IsBool(JSValueConst v)
@@ -64,7 +64,7 @@ public static class JsValueTypes
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsBool(this JsValue @this)
     {
-        return @this.Data.tag is JsTag.Bool;
+        return @this.Tag is JsTag.Bool;
     }
 
     //static inline JS_BOOL JS_IsNull(JSValueConst v)
@@ -74,7 +74,7 @@ public static class JsValueTypes
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsNull(this JsValue @this)
     {
-        return @this.Data.tag is JsTag.Null;
+        return @this.Tag is JsTag.Null;
     }
 
     //static inline JS_BOOL JS_IsUndefined(JSValueConst v)
@@ -84,7 +84,7 @@ public static class JsValueTypes
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsUndefined(this JsValue @this)
     {
-        return @this.Data.tag is JsTag.Undefined;
+        return @this.Tag is JsTag.Undefined;
     }
 
     //static inline JS_BOOL JS_IsException(JSValueConst v)
@@ -94,7 +94,7 @@ public static class JsValueTypes
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsException(this JsValue @this)
     {
-        return @this.Data.tag is JsTag.Exception;
+        return @this.Tag is JsTag.Exception;
     }
 
     //static inline JS_BOOL JS_IsUninitialized(JSValueConst v)
@@ -104,7 +104,7 @@ public static class JsValueTypes
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsUninitialized(this JsValue @this)
     {
-        return @this.Data.tag is JsTag.Uninitialized;
+        return @this.Tag is JsTag.Uninitialized;
     }
 
     //static inline JS_BOOL JS_IsString(JSValueConst v)
@@ -114,7 +114,7 @@ public static class JsValueTypes
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsString(this JsValue @this)
     {
-        return @this.Data.tag is JsTag.String;
+        return @this.Tag is JsTag.String;
     }
 
     //static inline JS_BOOL JS_IsSymbol(JSValueConst v)
@@ -124,7 +124,7 @@ public static class JsValueTypes
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsSymbol(this JsValue @this)
     {
-        return @this.Data.tag is JsTag.Symbol;
+        return @this.Tag is JsTag.Symbol;
     }
 
     //static inline JS_BOOL JS_IsObject(JSValueConst v)
@@ -134,7 +134,7 @@ public static class JsValueTypes
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsObject(this JsValue @this)
     {
-        return @this.Data.tag is JsTag.Object;
+        return @this.Tag is JsTag.Object;
     }
 
     //ref #L9753

@@ -10,7 +10,7 @@ internal static class JsValueCreateHelper
     //#define JS_MKVAL(tag, val) (JSValue){ (JSValueUnion){ .int32 = val }, tag }
     private static JsValue MkVal(JsTag tag, int val)
     {
-        var item = new JsValue { Data = { tag = tag }, int32 = val };
+        var item = new JsValue { Tag = tag, int32 = val };
         return item;
     }
 
@@ -36,7 +36,7 @@ internal static class JsValueCreateHelper
     //#define JS_MKPTR(tag, p) (JSValue){ (JSValueUnion){ .ptr = p }, tag }
 
     //#define JS_NAN (JSValue){ .u.float64 = JS_FLOAT64_NAN, JS_TAG_FLOAT64 }
-    public static JsValue Nan => new() { Data = { tag = JsTag.Float64 }, float64 = double.NaN };
+    public static JsValue Nan => new() { Tag = JsTag.Float64, float64 = double.NaN };
 
     //static inline JSValue __JS_NewFloat64(JSContext *ctx, double d)
     //{
@@ -45,8 +45,7 @@ internal static class JsValueCreateHelper
     //    v.u.float64 = d;
     //    return v;
     //}
-    private static JsValue __NewFloat64(double d) =>
-        new() { Data = { tag = JsTag.Float64 }, float64 = d };
+    private static JsValue __NewFloat64(double d) => new() { Tag = JsTag.Float64, float64 = d };
 
     //static inline JS_BOOL JS_VALUE_IS_NAN(JSValue v)
     //{
@@ -61,7 +60,7 @@ internal static class JsValueCreateHelper
     //}
     public static bool IsNan(JsValue v)
     {
-        return v.Data.tag == JsTag.Float64 && (v.uint64 & 0x7fffffffffffffff) > 0x7ff0000000000000;
+        return v.Tag == JsTag.Float64 && (v.uint64 & 0x7fffffffffffffff) > 0x7ff0000000000000;
     }
 
     //static js_force_inline JSValue JS_NewBool(JSContext* ctx, JS_BOOL val)
@@ -185,9 +184,9 @@ internal static class JsValueCreateHelper
     /// <param name="ctx"></param>
     /// <param name="str"></param>
     /// <param name="autoDrop"> whether to decrease ref count when pass to unmanaged environment </param>
-    public static unsafe AutoDropJsValue NewString(JsContext* ctx, string str, bool autoDrop)
+    public static unsafe AutoDropJsValue NewString(JsContext* ctx, string str)
     {
-        return Native.JS_NewString(ctx, str, autoDrop);
+        return Native.JS_NewString(ctx, str);
     }
 
     /// <summary>
@@ -197,8 +196,8 @@ internal static class JsValueCreateHelper
     /// <param name="str"></param>
     /// <param name="autoDrop"> whether to decrease ref count when pass to unmanaged environment </param>
     /// <returns></returns>
-    public static unsafe AutoDropJsValue FromJson(JsContext* ctx, string str, bool autoDrop)
+    public static unsafe AutoDropJsValue FromJson(JsContext* ctx, string str)
     {
-        return Native.JS_ParseJSON(ctx, str, autoDrop);
+        return Native.JS_ParseJSON(ctx, str);
     }
 }
