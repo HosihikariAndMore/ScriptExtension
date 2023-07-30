@@ -20,8 +20,8 @@ internal static unsafe class TestModule
         {
             var argv = new ReadOnlySpan<JsValue>(argvIn, argCount);
             var arg = argv[0];
-            Log.Logger.Debug("测试", arg.ToString(ctx));
-            using var ret = JsValueCreateHelper.NewString(ctx, "测试返回字符串");
+            Log.Logger.Debug("test" + arg.ToString(ctx));
+            using var ret = JsValueCreateHelper.NewString(ctx, "test return");
             return ret.Steal();
         }
         catch (Exception ex)

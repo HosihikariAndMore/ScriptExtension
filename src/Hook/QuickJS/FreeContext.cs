@@ -17,8 +17,7 @@ internal class FreeContext : HookBase<FreeContext.HookDelegate>
             if (--ctx->header.ref_count > 0)
                 return;
             Log.Logger.Trace(
-                type: "JS_FreeContext",
-                "ctx: " + (nint)ctx + " ctx->refCount: " + ctx->header.ref_count
+                "JS_FreeContext ctx: " + (nint)ctx + " ctx->refCount: " + ctx->header.ref_count
             );
             Loader.Manager.FreeContext(ctx);
             Original.Invoke(ctx);

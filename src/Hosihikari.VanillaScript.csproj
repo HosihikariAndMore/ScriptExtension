@@ -9,13 +9,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <PackageReference Include="Hosihikari.Logging" Version="1.0.0" />
 	  <PackageReference Include="Hosihikari.PluginManager" Version="1.0.1" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<Reference Include="Hosihikari.Logging">
-		  <HintPath>..\..\Logging\src\bin\Release\net7.0\Hosihikari.Logging.dll</HintPath>
-		</Reference>
+	<ItemGroup> 
 		<Reference Include="Hosihikari.Minecraft">
 		  <HintPath>..\..\Minecraft\src\bin\Release\net7.0\Hosihikari.Minecraft.dll</HintPath>
 		</Reference>

@@ -68,19 +68,28 @@ public static class JsValueExtension
         }
     }
       */
-        Log.Logger.Trace(
-            "UnsafeRemoveRefCount ctx: 0x"
-                + ((nint)ctx).ToString("X")
-                + " tag:"
-                + @this.Tag
-                + " hasRefCount:"
-                + @this.HasRefCount()
-                + " refCount:"
-                + @this.GetRefCount()
-        );
 #if DEBUG
+        if (@this.HasRefCount())
+        {
+            Log.Logger.Trace(
+                "UnsafeRemoveRefCount ctx: 0x"
+                    + ((nint)ctx).ToString("X")
+                    + " tag:"
+                    + @this.Tag
+                    + " refCount:"
+                    + @this.GetRefCount()
+            );
+        }
         if (!Enum.IsDefined(@this.Tag))
         {
+            Log.Logger.Trace(
+                "UnsafeRemoveRefCount ctx: 0x"
+                    + ((nint)ctx).ToString("X")
+                    + " tag:"
+                    + @this.Tag
+                    + " refCount:"
+                    + @this.GetRefCount()
+            );
             Log.Logger.Error(
                 "tag not define. may already freed by GC. please check." + Environment.StackTrace
             );

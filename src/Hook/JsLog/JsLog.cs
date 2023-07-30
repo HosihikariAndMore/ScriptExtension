@@ -29,7 +29,7 @@ internal class JsLog
             }
             catch (Exception ex)
             {
-                Log.Logger.Error("PrintTrace", "Invoke Failed", ex);
+                Log.Logger.Error("PrintTrace Invoke Failed", ex);
             }
             return JsValueCreateHelper.Undefined;
         }
@@ -43,11 +43,11 @@ internal class JsLog
         {
             try
             {
-                Log.Logger.Info(ParseLog(ctx, new ReadOnlySpan<JsValue>(argvIn, argCount)));
+                Log.Logger.Information(ParseLog(ctx, new ReadOnlySpan<JsValue>(argvIn, argCount)));
             }
             catch (Exception ex)
             {
-                Log.Logger.Error("PrintInfo", "Invoke Failed", ex);
+                Log.Logger.Error("PrintInfo Invoke Failed", ex);
             }
             return JsValueCreateHelper.Undefined;
         }
@@ -63,7 +63,7 @@ internal class JsLog
             }
             catch (Exception ex)
             {
-                Log.Logger.Error("PrintDebug", "Invoke Failed", ex);
+                Log.Logger.Error("PrintDebug Invoke Failed", ex);
             }
             return JsValueCreateHelper.Undefined;
         }
@@ -75,11 +75,11 @@ internal class JsLog
         {
             try
             {
-                Log.Logger.Warn(ParseLog(ctx, new ReadOnlySpan<JsValue>(argvIn, argCount)));
+                Log.Logger.Warning(ParseLog(ctx, new ReadOnlySpan<JsValue>(argvIn, argCount)));
             }
             catch (Exception ex)
             {
-                Log.Logger.Error("PrintWarn", "Invoke Failed", ex);
+                Log.Logger.Error("PrintWarn Invoke Failed", ex);
             }
             return JsValueCreateHelper.Undefined;
         }
@@ -100,7 +100,7 @@ internal class JsLog
             }
             catch (Exception ex)
             {
-                Log.Logger.Error("PrintError", "Invoke Failed", ex);
+                Log.Logger.Error("PrintError Invoke Failed", ex);
             }
             return JsValueCreateHelper.Undefined;
         }

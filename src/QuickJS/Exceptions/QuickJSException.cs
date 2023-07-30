@@ -1,4 +1,5 @@
 ﻿using Hosihikari.VanillaScript.QuickJS.Wrapper;
+using System.Linq;
 
 namespace Hosihikari.VanillaScript.QuickJS.Exceptions;
 
@@ -29,13 +30,22 @@ public class QuickJsException : Exception
         get
         {
             var originalStackTrace = base.StackTrace;
-            if (JsStack is not null)
+            var jsStack = JsStack;
+            if (jsStack is not null)
             {
+                jsStack = string.Join(
+                    Environment.NewLine,
+                    from x in jsStack.Split(
+                        new[] { '\r', '\n' },
+                        StringSplitOptions.RemoveEmptyEntries
+                    )
+                    select "   " + x.TrimStart()
+                );
                 if (originalStackTrace is null)
                 {
-                    return JsStack;
+                    return jsStack;
                 }
-                return JsStack + Environment.NewLine + originalStackTrace;
+                return jsStack + Environment.NewLine + originalStackTrace;
             }
             return originalStackTrace;
         }
