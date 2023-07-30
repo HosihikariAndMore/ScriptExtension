@@ -177,7 +177,7 @@ public class JsContextWrapper
                     }
                     catch (Exception ex)
                     { //pass the exception to js context
-                        Native.JS_ThrowInternalError(ctx, ex.ToString());
+                        Native.JS_ThrowInternalError(ctx, ex);
                         return JsValueCreateHelper.Exception;
                     }
                 }
