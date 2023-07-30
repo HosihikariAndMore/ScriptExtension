@@ -631,7 +631,6 @@ else
         "JS_GetScriptOrModuleName"
     );
     #endregion
-
     #region JS_AtomToCString
 
     //const char *JS_AtomToCString(JSContext *ctx, JSAtom atom)
@@ -657,5 +656,71 @@ else
 
     private static readonly Lazy<nint> _ptrJsFreeAtom = GetPointerLazy("JS_FreeAtom");
 
+    #endregion
+    #region JS_NewPromiseCapability
+    //JSValue JS_NewPromiseCapability(JSContext *ctx, JSValue *resolving_funcs)
+    //ret = JS_Call(ctx, resolve, JS_UNDEFINED, 1, (JSValueConst *)&values);
+    public static AutoDropJsValue JS_NewPromiseCapability(
+        JsContext* ctx,
+        out SafeJsValue resolve,
+        out SafeJsValue reject
+    )
+    {
+        //#L46698
+        /*
+             for(i = 0; i < 2; i++)
+                resolving_funcs[i] = JS_DupValue(ctx, s->data[i]);
+         */
+        var resolvingFunc = stackalloc JsValue[2];
+        var func = (delegate* unmanaged<JsContext*, JsValue*, JsValue>)
+            _ptrJsNewPromiseCapability.Value;
+        var result = func(ctx, resolvingFunc);
+        if (result.IsException())
+            ThrowPendingException(ctx);
+        resolve = new SafeJsValue(new AutoDropJsValue(resolvingFunc[0], ctx));
+        reject = new SafeJsValue(new AutoDropJsValue(resolvingFunc[1], ctx));
+        return new AutoDropJsValue(result, ctx);
+    }
+
+    private static readonly Lazy<nint> _ptrJsNewPromiseCapability = GetPointerLazy(
+        "JS_NewPromiseCapability"
+    );
+    #endregion
+
+    #region JS_Call
+    /*
+JSValue JS_Call(JSContext *ctx, JSValueConst func_obj, JSValueConst this_obj,
+                int argc, JSValueConst *argv)
+{
+    return JS_CallInternal(ctx, func_obj, this_obj, JS_UNDEFINED,
+                           argc, (JSValue *)argv, JS_CALL_FLAG_COPY_ARGV);
+}
+
+static JSValue JS_CallFree(JSContext *ctx, JSValue func_obj, JSValueConst this_obj,
+                           int argc, JSValueConst *argv)
+{
+    JSValue res = JS_CallInternal(ctx, func_obj, this_obj, JS_UNDEFINED,
+                                  argc, (JSValue *)argv, JS_CALL_FLAG_COPY_ARGV);
+    JS_FreeValue(ctx, func_obj);
+    return res;
+}
+     */
+    public static AutoDropJsValue JS_Call(
+        JsContext* ctx,
+        JsValue func,
+        JsValue thisObj,
+        int argc,
+        JsValue* argv
+    )
+    {
+        var funcPtr = (delegate* unmanaged<JsContext*, JsValue, JsValue, int, JsValue*, JsValue>)
+            _ptrJsCall.Value;
+        var result = funcPtr(ctx, func, thisObj, argc, argv);
+        if (result.IsException())
+            ThrowPendingException(ctx);
+        return new AutoDropJsValue(result, ctx);
+    }
+
+    private static readonly Lazy<nint> _ptrJsCall = GetPointerLazy("JS_Call");
     #endregion
 }

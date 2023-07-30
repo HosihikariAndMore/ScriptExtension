@@ -192,7 +192,6 @@ internal static class JsValueCreateHelper
     /// </summary>
     /// <param name="ctx"></param>
     /// <param name="str"></param>
-    /// <param name="autoDrop"> whether to decrease ref count when pass to unmanaged environment </param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe AutoDropJsValue NewString(JsContext* ctx, string str)
     {
@@ -204,7 +203,6 @@ internal static class JsValueCreateHelper
     /// </summary>
     /// <param name="ctx"></param>
     /// <param name="str"></param>
-    /// <param name="autoDrop"> whether to decrease ref count when pass to unmanaged environment </param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe AutoDropJsValue FromJson(JsContext* ctx, string str)
@@ -221,5 +219,15 @@ internal static class JsValueCreateHelper
     public static unsafe AutoDropJsValue NewObject(JsContext* ctx)
     {
         return Native.JS_NewObject(ctx);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe AutoDropJsValue NewPromise(
+        JsContext* ctx,
+        out SafeJsValue resolve,
+        out SafeJsValue reject
+    )
+    {
+        return Native.JS_NewPromiseCapability(ctx, out resolve, out reject);
     }
 }
