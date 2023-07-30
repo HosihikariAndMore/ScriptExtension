@@ -1,5 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using System.Text;
+using Hosihikari.Logging;
+using Hosihikari.VanillaScript.Assets;
 using Hosihikari.VanillaScript.QuickJS;
 using Hosihikari.VanillaScript.QuickJS.Extensions;
 using Hosihikari.VanillaScript.QuickJS.Helper;
@@ -9,6 +11,23 @@ namespace Hosihikari.VanillaScript.Hook.JsLog;
 
 internal class JsLog
 {
+    private static Dictionary<string, Logger> _loggers = new();
+
+    private static unsafe Logger GetJsLogger(JsContext* ctx)
+    {
+        var file = Native.JS_GetScriptOrModuleName(ctx, 1);
+        if (string.IsNullOrWhiteSpace(file) || file == Prepare.EntryPointJsName)
+        {
+            return Log.Logger;
+        }
+        if (_loggers.TryGetValue(file, out var logger))
+            return logger;
+        logger = new Logger(file);
+        logger.SetupConsole();
+        _loggers.Add(file, logger);
+        return logger;
+    }
+
     public static unsafe void Bind(JsContext* ctx, JsValue globalObject)
     {
         using var consoleInstance = Native.JS_NewObject(ctx);
@@ -21,15 +40,16 @@ internal class JsLog
             try
             {
                 var (file, line) = GetJsSourceInfo(ctx);
-                Log.Logger.Trace(
-                    ParseLog(ctx, new ReadOnlySpan<JsValue>(argvIn, argCount)),
-                    sourceFile: file,
-                    sourceLine: line
-                );
+                GetJsLogger(ctx)
+                    .Trace(
+                        ParseLog(ctx, new ReadOnlySpan<JsValue>(argvIn, argCount)),
+                        sourceFile: file,
+                        sourceLine: line
+                    );
             }
             catch (Exception ex)
             {
-                Log.Logger.Error("PrintTrace Invoke Failed", ex);
+                GetJsLogger(ctx).Error("PrintTrace Invoke Failed", ex);
             }
             return JsValueCreateHelper.Undefined;
         }
@@ -43,11 +63,12 @@ internal class JsLog
         {
             try
             {
-                Log.Logger.Information(ParseLog(ctx, new ReadOnlySpan<JsValue>(argvIn, argCount)));
+                GetJsLogger(ctx)
+                    .Information(ParseLog(ctx, new ReadOnlySpan<JsValue>(argvIn, argCount)));
             }
             catch (Exception ex)
             {
-                Log.Logger.Error("PrintInfo Invoke Failed", ex);
+                GetJsLogger(ctx).Error("PrintInfo Invoke Failed", ex);
             }
             return JsValueCreateHelper.Undefined;
         }
@@ -59,11 +80,11 @@ internal class JsLog
         {
             try
             {
-                Log.Logger.Debug(ParseLog(ctx, new ReadOnlySpan<JsValue>(argvIn, argCount)));
+                GetJsLogger(ctx).Debug(ParseLog(ctx, new ReadOnlySpan<JsValue>(argvIn, argCount)));
             }
             catch (Exception ex)
             {
-                Log.Logger.Error("PrintDebug Invoke Failed", ex);
+                GetJsLogger(ctx).Error("PrintDebug Invoke Failed", ex);
             }
             return JsValueCreateHelper.Undefined;
         }
@@ -75,11 +96,12 @@ internal class JsLog
         {
             try
             {
-                Log.Logger.Warning(ParseLog(ctx, new ReadOnlySpan<JsValue>(argvIn, argCount)));
+                GetJsLogger(ctx)
+                    .Warning(ParseLog(ctx, new ReadOnlySpan<JsValue>(argvIn, argCount)));
             }
             catch (Exception ex)
             {
-                Log.Logger.Error("PrintWarn Invoke Failed", ex);
+                GetJsLogger(ctx).Error("PrintWarn Invoke Failed", ex);
             }
             return JsValueCreateHelper.Undefined;
         }
@@ -92,15 +114,16 @@ internal class JsLog
             try
             {
                 var (file, line) = GetJsSourceInfo(ctx);
-                Log.Logger.Error(
-                    ParseLog(ctx, new ReadOnlySpan<JsValue>(argvIn, argCount)),
-                    sourceFile: file,
-                    sourceLine: line
-                );
+                GetJsLogger(ctx)
+                    .Error(
+                        ParseLog(ctx, new ReadOnlySpan<JsValue>(argvIn, argCount)),
+                        sourceFile: file,
+                        sourceLine: line
+                    );
             }
             catch (Exception ex)
             {
-                Log.Logger.Error("PrintError Invoke Failed", ex);
+                GetJsLogger(ctx).Error("PrintError Invoke Failed", ex);
             }
             return JsValueCreateHelper.Undefined;
         }
@@ -115,7 +138,7 @@ internal class JsLog
         //    var argv = new ReadOnlySpan<JsValue>(argvIn, argCount);
         //    if (argv[0].IsFalsey(ctx))
         //    {
-        //        Log.Logger.Error(ParseLog(ctx, argv.Slice(1)));
+        //        GetJsLogger(ctx).Error(ParseLog(ctx, argv.Slice(1)));
         //    }
         //    return JsValueCreateHelper.Undefined;
         //}
