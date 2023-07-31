@@ -238,5 +238,3 @@ public class JsContextWrapper
         return Native.JS_NewCFunction2(Context, func, name, argumentLength, protoType, 0);
     }
 }
-
-public delegate JsValue JsModuleImportDelegate(JsContextWrapper ctx);

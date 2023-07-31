@@ -1,5 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Hosihikari.Logging;
 using Hosihikari.NativeInterop;
 using Hosihikari.NativeInterop.Utils;
 using Hosihikari.VanillaScript.QuickJS.Exceptions;
@@ -22,8 +23,18 @@ internal static unsafe class Native
     private static void ThrowPendingException(JsContext* ctx)
     {
         using var ex = JS_GetException(ctx);
+#if DEBUG
         if (ex.Value.IsNull())
-            return;
+        {
+            Log.Logger.Error(Environment.StackTrace);
+            Log.Logger.Error(
+                "[DEBUG Mode] Unexpected ThrowPendingException, please check error handing logic !!!"
+            );
+            Log.Logger.Information("Press any key to continue.");
+            Console.ReadLine();
+        }
+#endif
+        //throw new QuickJsException("unknown exception");
         throw new QuickJsException(ex);
     }
 
@@ -765,5 +776,83 @@ static JSValue JS_CallFree(JSContext *ctx, JSValue func_obj, JSValueConst this_o
     }
 
     private static readonly Lazy<nint> _ptrJsCall = GetPointerLazy("JS_Call");
+    #endregion
+    #region JS_NewArray
+    public static AutoDropJsValue JS_NewArray(JsContext* ctx)
+    {
+        var func = (delegate* unmanaged<JsContext*, JsValue>)_ptrJsNewArray.Value;
+        var result = func(ctx);
+        if (result.IsException())
+            ThrowPendingException(ctx);
+        return new AutoDropJsValue(result, ctx);
+    }
+
+    private static readonly Lazy<nint> _ptrJsNewArray = GetPointerLazy("JS_NewArray");
+    #endregion
+    #region JS_SetPropertyUint32
+    /*int JS_SetPropertyUint32(JSContext *ctx, JSValueConst this_obj,
+                         uint32_t idx, JSValue val)*/
+    public static bool JS_SetPropertyUint32(JsContext* ctx, JsValue thisObj, uint idx, JsValue val)
+    {
+        var func = (delegate* unmanaged<JsContext*, JsValue, uint, JsValue, int>)
+            _ptrJsSetPropertyUint32.Value;
+        var result = func(ctx, thisObj, idx, val);
+        if (result == -1)
+            ThrowPendingException(ctx);
+        return result == 1;
+    }
+
+    private static readonly Lazy<nint> _ptrJsSetPropertyUint32 = GetPointerLazy(
+        "JS_SetPropertyUint32"
+    );
+    #endregion
+
+
+    #region JS_GetOwnPropertyNames
+    /*int JS_GetOwnPropertyNames(JSContext *ctx, JSPropertyEnum **ptab,
+                           uint32_t *plen, JSValueConst obj, int flags)*/
+    public static string[] JS_GetOwnPropertyNames(JsContext* ctx, JsValue obj)
+    {
+        var func = (delegate* unmanaged<
+            JsContext*,
+            out JsPropertyEnum*,
+            out uint,
+            JsValue,
+            int,
+            int>)
+            _ptrJsGetOwnPropertyNames.Value;
+        var result = func(ctx, out var ptab, out var plen, obj, 0);
+        if (result != 0)
+            ThrowPendingException(ctx);
+        try
+        {
+            var names = new string[plen];
+            for (var i = 0; i < plen; i++)
+            {
+                var name = JS_AtomToCString(ctx, ptab[i].Atom);
+                names[i] = name;
+            }
+            return names;
+        }
+        finally
+        {
+            //free ptab
+            js_free(ctx, ptab);
+        }
+    }
+
+    private static readonly Lazy<nint> _ptrJsGetOwnPropertyNames = GetPointerLazy(
+        "JS_GetOwnPropertyNames"
+    );
+    #endregion
+    #region js_free
+    //void js_free(JSContext *ctx, void *ptr)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void js_free(JsContext* ctx, void* ptr)
+    {
+        ((delegate* unmanaged<JsContext*, void*, void>)_ptrJsFree.Value)(ctx, ptr);
+    }
+
+    private static readonly Lazy<nint> _ptrJsFree = GetPointerLazy("js_free");
     #endregion
 }

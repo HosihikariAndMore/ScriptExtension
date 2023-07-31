@@ -15,7 +15,7 @@ typedef struct JSValue {
     int64_t tag;
 } JSValue;
  */
-[StructLayout(LayoutKind.Explicit)]
+[StructLayout(LayoutKind.Explicit, Size = 16)]
 public struct JsValue
 {
     //[StructLayout(LayoutKind.Sequential)]

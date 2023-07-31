@@ -9,6 +9,16 @@ public ref struct JsModuleDefWrapper
     public required string ModuleName;
     public required Dictionary<string, JsModuleImportDelegate> Members;
 
+    public void AddExportValue(string name, JsModuleImportDelegate onImport)
+    {
+        AddExport(name, onImport);
+    }
+
+    public void AddExportValue(string name, JsModuleImportAutoDelegate onImport)
+    {
+        AddExport(name, c => onImport(c).Steal());
+    }
+
     public unsafe void AddExportFunction(
         string name,
         int argumentLength,

@@ -1,5 +1,4 @@
-﻿using Hosihikari.VanillaScript.Loader.Modules.IO;
-using Hosihikari.VanillaScript.QuickJS.Wrapper;
+﻿using Hosihikari.VanillaScript.QuickJS.Wrapper;
 
 namespace Hosihikari.VanillaScript.Loader;
 
@@ -15,7 +14,7 @@ public static partial class Manager
         OnContextCreated?.Invoke(ctx);
         if (Config.Data.BuildInModules.FileIo)
         {
-            FileModule.Setup(ctx);
+            Modules.IO.Main.Setup(ctx);
         }
     }
 }

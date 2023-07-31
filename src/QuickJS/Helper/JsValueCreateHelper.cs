@@ -1,4 +1,6 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Hosihikari.VanillaScript.QuickJS.Types;
 using Hosihikari.VanillaScript.QuickJS.Wrapper;
@@ -13,6 +15,74 @@ internal static class JsValueCreateHelper
     {
         var item = new JsValue { Tag = tag, int32 = val };
         return item;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool NewUnmanagedInternal<T>(T val, [NotNullWhen(true)] out JsValue? jsValue)
+    {
+        //match all unmanaged types
+        jsValue = val switch
+        {
+            bool b => NewBool(b),
+            char c => NewCatchOffset(c),
+            byte b => NewInt32(b),
+            sbyte sb => NewInt32(sb),
+            short s => NewInt32(s),
+            ushort us => NewInt32(us),
+            int i => NewInt32(i),
+            uint ui => NewUint32(ui),
+            long l => NewInt64(l),
+            ulong ul => NewFloat64(ul),
+            float f => NewFloat64(f),
+            double d => NewFloat64(d),
+            decimal dec => NewFloat64((double)dec),
+            _ => null
+        };
+        return jsValue is not null;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool NewUnmanaged<T>(T val, [NotNullWhen(true)] out JsValue? jsValue)
+        where T : unmanaged
+    {
+        return NewUnmanagedInternal(val, out jsValue);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static JsValue NewUnmanaged<T>(T val)
+        where T : unmanaged
+    {
+        //match all unmanaged types
+        if (NewUnmanaged(val, out var jsValue))
+        {
+            return jsValue.Value;
+        }
+        throw new NotImplementedException($"new {typeof(T)} is not support");
+    }
+
+    public static unsafe AutoDropJsValue New<T>(T val, JsContext* ctx)
+    {
+        if (NewUnmanagedInternal(val, out var jsValue))
+        {
+            return new AutoDropJsValue(jsValue.Value, ctx);
+        }
+        return val switch
+        {
+            string s => NewString(ctx, s),
+            string[] ss => NewArray(ctx, ss),
+            byte[] cc => NewArray(ctx, cc),
+            sbyte[] sb => NewArray(ctx, sb),
+            short[] ss => NewArray(ctx, ss),
+            ushort[] us => NewArray(ctx, us),
+            int[] ii => NewArray(ctx, ii),
+            uint[] ui => NewArray(ctx, ui),
+            long[] ll => NewArray(ctx, ll),
+            ulong[] ul => NewArray(ctx, ul),
+            float[] ff => NewArray(ctx, ff),
+            double[] dd => NewArray(ctx, dd),
+            decimal[] dec => NewArray(ctx, dec),
+            _ => throw new NotImplementedException($"new {typeof(T)} is not support")
+        };
     }
 
     //    /* special values */
@@ -219,6 +289,45 @@ internal static class JsValueCreateHelper
     public static unsafe AutoDropJsValue NewObject(JsContext* ctx)
     {
         return Native.JS_NewObject(ctx);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe AutoDropJsValue NewArray(JsContext* ctx)
+    {
+        return Native.JS_NewArray(ctx);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe AutoDropJsValue NewArray(JsContext* ctx, string[] strings)
+    {
+        var array = Native.JS_NewArray(ctx);
+        for (uint i = 0; i < strings.Length; i++)
+        {
+            using var str = NewString(ctx, strings[i]);
+            Native.JS_SetPropertyUint32(ctx, array.Value, i, str.Steal());
+        }
+        return array;
+    }
+
+    public static unsafe AutoDropJsValue NewArray(JsContext* ctx, AutoDropJsValue[] values)
+    {
+        var array = Native.JS_NewArray(ctx);
+        for (uint i = 0; i < values.Length; i++)
+        {
+            Native.JS_SetPropertyUint32(ctx, array.Value, i, values[i].Steal());
+        }
+        return array;
+    }
+
+    public static unsafe AutoDropJsValue NewArray<T>(JsContext* ctx, T[] values)
+        where T : unmanaged
+    {
+        var array = Native.JS_NewArray(ctx);
+        for (uint i = 0; i < values.Length; i++)
+        {
+            Native.JS_SetPropertyUint32(ctx, array.Value, i, New(values[i], ctx).Steal());
+        }
+        return array;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
