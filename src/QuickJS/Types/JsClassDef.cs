@@ -1,7 +1,5 @@
 ﻿namespace Hosihikari.VanillaScript.QuickJS.Types;
 
-using JsAtom = UInt32;
-
 //typedef struct JSClassDef
 public unsafe ref struct JsClassDef
 {

@@ -19,13 +19,13 @@ public static class JsPromiseHelper
              */
             errorObj.DefineProperty(
                 ctx.Context,
-                JsAtomConst.Message,
+                JsAtom.BuildIn.Message,
                 JsValueCreateHelper.NewString(ctx.Context, exception.Message).Steal(),
                 JsPropertyFlags.Writable | JsPropertyFlags.Configurable
             );
             errorObj.DefineProperty(
                 ctx.Context,
-                JsAtomConst.Stack,
+                JsAtom.BuildIn.Stack,
                 JsValueCreateHelper.NewString(ctx.Context, exception.StackTrace ?? "").Steal(),
                 JsPropertyFlags.Writable | JsPropertyFlags.Configurable
             );

@@ -137,7 +137,7 @@ public static class JsValueExtension
     public static unsafe bool DefineProperty(
         this JsValue @this,
         JsContext* ctx,
-        uint propertyAtom,
+        JsAtom propertyAtom,
         JsValue value,
         JsPropertyFlags flags = JsPropertyFlags.CWE
     )

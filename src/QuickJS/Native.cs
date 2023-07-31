@@ -8,8 +8,6 @@ using Hosihikari.VanillaScript.QuickJS.Helper;
 using Hosihikari.VanillaScript.QuickJS.Types;
 using Hosihikari.VanillaScript.QuickJS.Wrapper;
 using size_t = nuint;
-using JsAtom = System.UInt32;
-using JSClassID = System.UInt32;
 
 namespace Hosihikari.VanillaScript.QuickJS;
 
@@ -237,28 +235,7 @@ else
     //todo
 
     #endregion
-    #region JS_GetClassProto
-    //JSValue JS_GetClassProto(JSContext* ctx, JSClassID class_id)
-    //{
-    //    JSRuntime* rt = ctx->rt;
-    //    assert(class_id < rt->class_count);
-    //    return JS_DupValue(ctx, ctx->class_proto[class_id]);
-    //}
-    public static AutoDropJsValue JS_GetClassProto(JsContext* ctx, JsClassIdEnum classId)
-    {
-        var func = (delegate* unmanaged<JsContext*, JsClassIdEnum, JsValue>)
-            _ptrJsGetClassProto.Value;
-        var result = func(ctx, classId);
-        if (result.IsException())
-        {
-            ThrowPendingException(ctx);
-        }
-        //it use JS_DupValue so need to free
-        return new AutoDropJsValue(result, ctx);
-    }
 
-    private static readonly Lazy<nint> _ptrJsGetClassProto = GetPointerLazy("JS_GetClassProto");
-    #endregion
 
     #region JS_DefinePropertyValue
     //int JS_DefinePropertyValue(JSContext* ctx, JSValueConst this_obj,
@@ -667,7 +644,7 @@ else
     {
         var func = (delegate* unmanaged<JsContext*, int, JsAtom>)_ptrJsGetScriptOrModuleName.Value;
         var result = func(ctx, nStackLevels);
-        if (result == JsAtomConst.Null)
+        if (result == JsAtom.BuildIn.Null)
         {
             return string.Empty;
         }
@@ -854,10 +831,10 @@ static JSValue JS_CallFree(JSContext *ctx, JSValue func_obj, JSValueConst this_o
     #region JS_NewClassID
     //JSClassID JS_NewClassID(JSClassID *pclass_id);
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static JSClassID JS_NewClassID()
+    public static JsClassId JS_NewClassID()
     {
-        uint classId = 0;
-        ((delegate* unmanaged<JSClassID*, JSClassID>)_ptrJsNewClassId.Value)(&classId);
+        JsClassId classId = new() { Id = 0 };
+        ((delegate* unmanaged<JsClassId*, JsClassId>)_ptrJsNewClassId.Value)(&classId);
         return classId;
     }
 
@@ -866,9 +843,9 @@ static JSValue JS_CallFree(JSContext *ctx, JSValue func_obj, JSValueConst this_o
     #region JS_IsRegisteredClass
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool JS_IsRegisteredClass(JsRuntime* ctx, JSClassID classId)
+    public static bool JS_IsRegisteredClass(JsRuntime* ctx, JsClassId classId)
     {
-        return ((delegate* unmanaged<JsRuntime*, JSClassID, int>)_ptrJsIsRegisteredClass.Value)(
+        return ((delegate* unmanaged<JsRuntime*, JsClassId, int>)_ptrJsIsRegisteredClass.Value)(
                 ctx,
                 classId
             ) != 0;
@@ -893,13 +870,14 @@ static JSValue JS_CallFree(JSContext *ctx, JSValue func_obj, JSValueConst this_o
 
     //int JS_NewClass(JSRuntime *rt, JSClassID class_id, const JSClassDef *class_def)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int JS_NewClass(JsRuntime* rt, JSClassID classId, JsClassDef* classDef)
+    public static int JS_NewClass(JsRuntime* rt, JsClassId classId, JsClassDef* classDef)
     {
-        return ((delegate* unmanaged<JsRuntime*, JSClassID, JsClassDef*, int>)_ptrJsNewClass.Value)(
-            rt,
-            classId,
-            classDef
-        );
+        var result = (
+            (delegate* unmanaged<JsRuntime*, JsClassId, JsClassDef*, int>)_ptrJsNewClass.Value
+        )(rt, classId, classDef);
+        if (result != 0)
+            throw new Exception("JS_NewClass failed");
+        return result;
     }
 
     private static readonly Lazy<nint> _ptrJsNewClass = GetPointerLazy("JS_NewClass");
@@ -909,7 +887,58 @@ static JSValue JS_CallFree(JSContext *ctx, JSValue func_obj, JSValueConst this_o
     //JSValue JS_NewObjectProtoClass(JSContext *ctx, JSValueConst proto, JSClassID class_id)
 
 
+    #endregion
 
+    #region JS_NewObjectClass
 
+    //  JSValue JS_NewObjectClass(JSContext* ctx, int class_id)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static JsValue JS_NewObjectClass(JsContext* ctx, JsClassId classId)
+    {
+        var result = (
+            (delegate* unmanaged<JsContext*, JsClassId, JsValue>)_ptrJsNewObjectClass.Value
+        )(ctx, classId);
+        if (result.IsException())
+            ThrowPendingException(ctx);
+        return result;
+    }
+
+    private static readonly Lazy<nint> _ptrJsNewObjectClass = GetPointerLazy("JS_NewObjectClass");
+
+    #endregion
+    #region JS_SetClassProto
+    //void JS_SetClassProto(JSContext *ctx, JSClassID class_id, JSValue obj)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void JS_SetClassProto(JsContext* ctx, JsClassId classId, JsValue obj)
+    {
+        ((delegate* unmanaged<JsContext*, JsClassId, JsValue, void>)_ptrJsSetClassProto.Value)(
+            ctx,
+            classId,
+            obj
+        );
+    }
+
+    private static readonly Lazy<nint> _ptrJsSetClassProto = GetPointerLazy("JS_SetClassProto");
+    #endregion
+    #region JS_GetClassProto
+    //JSValue JS_GetClassProto(JSContext* ctx, JSClassID class_id)
+    //{
+    //    JSRuntime* rt = ctx->rt;
+    //    assert(class_id < rt->class_count);
+    //    return JS_DupValue(ctx, ctx->class_proto[class_id]);
+    //}
+    public static AutoDropJsValue JS_GetClassProto(JsContext* ctx, JsClassId classId)
+    {
+        var func = (delegate* unmanaged<JsContext*, JsClassId, JsValue>)_ptrJsGetClassProto.Value;
+        var result = func(ctx, classId);
+        if (result.IsException())
+        {
+            ThrowPendingException(ctx);
+        }
+        //it use JS_DupValue so need to free
+        return new AutoDropJsValue(result, ctx);
+    }
+
+    private static readonly Lazy<nint> _ptrJsGetClassProto = GetPointerLazy("JS_GetClassProto");
     #endregion
 }
