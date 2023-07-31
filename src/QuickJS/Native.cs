@@ -45,13 +45,13 @@ internal static unsafe class Native
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void __JS_FreeValue(JsContext* ctx, JsValue jsValue)
     {
-        Log.Logger.Trace(
-            "call start __JS_FreeValue ctx: 0x" + ((nint)ctx).ToString("X") + " tag: " + jsValue.Tag
-        );
+        //Log.Logger.Trace(
+        //    "call start __JS_FreeValue ctx: 0x" + ((nint)ctx).ToString("X") + " tag: " + jsValue.Tag
+        //);
         ((delegate* unmanaged<JsContext*, JsValue, void>)_jsFreeValue.Value)(ctx, jsValue);
-        Log.Logger.Trace(
-            "call end __JS_FreeValue ctx: 0x" + ((nint)ctx).ToString("X") + " tag: " + jsValue.Tag
-        );
+        //Log.Logger.Trace(
+        //    "call end __JS_FreeValue ctx: 0x" + ((nint)ctx).ToString("X") + " tag: " + jsValue.Tag
+        //);
     }
 
     private static readonly Lazy<nint> _jsFreeValue = GetPointerLazy("__JS_FreeValue");

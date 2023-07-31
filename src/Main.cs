@@ -13,7 +13,10 @@ public class Main : IEntryPoint
         new EnableScriptingHook().Install();
         new Hook.QuickJS.Eval().Install();
         new Hook.QuickJS.FreeContext().Install();
+        new Hook.QuickJS.FreeRuntime().Install();
+        new Hook.QuickJS.NewRuntime2().Install();
         new Hook.QuickJS.AddIntrinsicBaseObjects().Install();
+        new Hook.RequestReload().Install();
         new Hook.JsLog.ContextObjectBindPrint().Install();
         Assets.Prepare.Init();
     }

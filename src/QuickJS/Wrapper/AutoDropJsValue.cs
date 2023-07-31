@@ -27,6 +27,10 @@ public class AutoDropJsValue : IDisposable
     {
         _value = value;
         _context = context;
+        if (JsContextWrapper.TryGet((nint)context, out var tCtx))
+        {
+            tCtx.FreeContextCallback += FreeThis;
+        }
     }
 
     /// <summary>
@@ -44,24 +48,23 @@ public class AutoDropJsValue : IDisposable
 
     public void Dispose()
     {
-        ReleaseUnmanagedResources();
+        FreeThis();
         GC.SuppressFinalize(this); //prevent call ~SafeJsValue()
     }
 
     ~AutoDropJsValue()
     {
-        ReleaseUnmanagedResources();
+        FreeThis();
     }
 
     //bool _disposed = false;
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void ReleaseUnmanagedResources()
+    private void FreeThis()
     {
         unsafe
         {
-            //if (_disposed)
-            //    return;
-            //_disposed = true;
+            if (JsContextWrapper.TryGet((nint)_context, out var tCtx))
+                tCtx.FreeContextCallback -= FreeThis;
 #if DEBUG
             //var stack = Environment.StackTrace;
             //LevelTick.PostTick(() =>

@@ -36,14 +36,14 @@ internal class Eval : HookBase<Eval.HookDelegate>
             {
                 if (Marshal.PtrToStringUTF8((nint)file) is { } filename)
                 {
-                    Log.Logger.Trace(
-                        "JS_Eval ctx: 0x"
-                            + ((nint)ctx).ToString("X")
-                            + " ctx->refCount: "
-                            + ctx->header.ref_count
-                            + " file: "
-                            + filename
-                    );
+                    //Log.Logger.Trace(
+                    //    "JS_Eval ctx: 0x"
+                    //        + ((nint)ctx).ToString("X")
+                    //        + " ctx->refCount: "
+                    //        + ctx->header.ref_count
+                    //        + " file: "
+                    //        + filename
+                    //);
                     var content = Encoding.UTF8.GetString(contentBytes, (int)size);
                     if (
                         content == Prepare.FailedScriptContent

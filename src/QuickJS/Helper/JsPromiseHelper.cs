@@ -41,7 +41,7 @@ public static class JsPromiseHelper
         Task tasks
     )
     {
-        var safeThis = new SafeJsValue(thisObj);
+        var safeThis = new SafeJsValue(thisObj, ctxPtr);
         Task.Run(async () =>
         {
             try
@@ -105,7 +105,7 @@ public static class JsPromiseHelper
         Func<T, JsValue> fetchResult
     )
     {
-        var safeThis = new SafeJsValue(thisObj);
+        var safeThis = new SafeJsValue(thisObj, ctxPtr);
         Task.Run(async () =>
         {
             try
@@ -125,6 +125,9 @@ public static class JsPromiseHelper
                                 1,
                                 &resultObj
                             );
+                            safeThis.FreeThis();
+                            promise.resolve.FreeThis();
+                            promise.reject.FreeThis();
                         }
                     }
                 });
@@ -145,6 +148,9 @@ public static class JsPromiseHelper
                                 1,
                                 &reasonObj
                             );
+                            safeThis.FreeThis();
+                            promise.resolve.FreeThis();
+                            promise.reject.FreeThis();
                         }
                     }
                 });

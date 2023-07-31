@@ -71,18 +71,18 @@ public static class JsValueExtension
 #if DEBUG
         if (@this.HasRefCount())
         {
-            Log.Logger.Trace(
-                "UnsafeRemoveRefCount ctx: 0x"
-                    + ((nint)ctx).ToString("X")
-                    + " tag:"
-                    + @this.Tag
-                    + " refCount:"
-                    + @this.GetRefCount()
-            );
+            //Log.Logger.Trace(
+            //    "UnsafeRemoveRefCount ctx: 0x"
+            //        + ((nint)ctx).ToString("X")
+            //        + " tag:"
+            //        + @this.Tag
+            //        + " refCount:"
+            //        + @this.GetRefCount()
+            //);
         }
         if (!Enum.IsDefined(@this.Tag))
         {
-            Log.Logger.Trace(
+            Log.Logger.Error(
                 "UnsafeRemoveRefCount ctx: 0x"
                     + ((nint)ctx).ToString("X")
                     + " tag:"

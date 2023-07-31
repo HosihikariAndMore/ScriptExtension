@@ -12,8 +12,9 @@ namespace Hosihikari.VanillaScript.Hook
         public override unsafe HookDelegate HookedFunc =>
             minecraft =>
             {
-                Original.Invoke(minecraft);
                 Config.Reload();
+                Loader.Manager.FreeAllContextJsValue();
+                Original.Invoke(minecraft);
             };
     }
 }

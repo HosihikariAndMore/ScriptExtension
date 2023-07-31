@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
 using System.Runtime.InteropServices;
 using Hosihikari.VanillaScript.Loader;
 using Hosihikari.VanillaScript.QuickJS.Helper;
@@ -10,11 +9,12 @@ namespace Hosihikari.VanillaScript.QuickJS.Wrapper;
 public class JsContextWrapper
 {
     public unsafe JsContext* Context { get; }
-    private List<GCHandle> savedObject = new();
+    private readonly List<GCHandle> _savedObject = new();
+    public event Action? FreeContextCallback;
 
     internal void Pin(object obj)
     {
-        savedObject.Add(GCHandle.Alloc(obj));
+        _savedObject.Add(GCHandle.Alloc(obj));
     }
 
     public static unsafe implicit operator JsContextWrapper(JsContext* ctx)
@@ -57,11 +57,33 @@ public class JsContextWrapper
         return newInstance;
     }
 
+    private bool _freed = false;
+
+    internal void ThrowIfFree()
+    {
+        if (_freed)
+        {
+            throw new ObjectDisposedException("JsContextWrapper");
+        }
+    }
+
+    internal void FreeValues()
+    {
+        FreeContextCallback?.Invoke();
+    }
+
     internal void Free()
     {
-        foreach (var pinedItem in savedObject)
+        try
         {
-            pinedItem.Free();
+            foreach (var pinedItem in _savedObject)
+            {
+                pinedItem.Free();
+            }
+        }
+        finally
+        {
+            _freed = true;
         }
     }
 
