@@ -1,6 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using Hosihikari.Logging;
 using Hosihikari.NativeInterop;
 using Hosihikari.NativeInterop.Utils;
 using Hosihikari.VanillaScript.QuickJS.Exceptions;
@@ -10,6 +9,7 @@ using Hosihikari.VanillaScript.QuickJS.Types;
 using Hosihikari.VanillaScript.QuickJS.Wrapper;
 using size_t = nuint;
 using JsAtom = System.UInt32;
+using JSClassID = System.UInt32;
 
 namespace Hosihikari.VanillaScript.QuickJS;
 
@@ -686,7 +686,6 @@ else
     );
     #endregion
     #region JS_AtomToCString
-
     //const char *JS_AtomToCString(JSContext *ctx, JSAtom atom)
     public static string JS_AtomToCString(JsContext* ctx, JsAtom atom)
     {
@@ -704,8 +703,7 @@ else
     //void JS_FreeAtom(JSContext *ctx, JSAtom v)
     public static void JS_FreeAtom(JsContext* ctx, JsAtom v)
     {
-        var func = (delegate* unmanaged<JsContext*, JsAtom, void>)_ptrJsFreeAtom.Value;
-        func(ctx, v);
+        ((delegate* unmanaged<JsContext*, JsAtom, void>)_ptrJsFreeAtom.Value)(ctx, v);
     }
 
     private static readonly Lazy<nint> _ptrJsFreeAtom = GetPointerLazy("JS_FreeAtom");
@@ -806,8 +804,6 @@ static JSValue JS_CallFree(JSContext *ctx, JSValue func_obj, JSValueConst this_o
         "JS_SetPropertyUint32"
     );
     #endregion
-
-
     #region JS_GetOwnPropertyNames
     /*int JS_GetOwnPropertyNames(JSContext *ctx, JSPropertyEnum **ptab,
                            uint32_t *plen, JSValueConst obj, int flags)*/
@@ -854,5 +850,66 @@ static JSValue JS_CallFree(JSContext *ctx, JSValue func_obj, JSValueConst this_o
     }
 
     private static readonly Lazy<nint> _ptrJsFree = GetPointerLazy("js_free");
+    #endregion
+    #region JS_NewClassID
+    //JSClassID JS_NewClassID(JSClassID *pclass_id);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static JSClassID JS_NewClassID()
+    {
+        uint classId = 0;
+        ((delegate* unmanaged<JSClassID*, JSClassID>)_ptrJsNewClassId.Value)(&classId);
+        return classId;
+    }
+
+    private static readonly Lazy<nint> _ptrJsNewClassId = GetPointerLazy("JS_NewClassID");
+    #endregion
+    #region JS_IsRegisteredClass
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool JS_IsRegisteredClass(JsRuntime* ctx, JSClassID classId)
+    {
+        return ((delegate* unmanaged<JsRuntime*, JSClassID, int>)_ptrJsIsRegisteredClass.Value)(
+                ctx,
+                classId
+            ) != 0;
+    }
+
+    private static readonly Lazy<nint> _ptrJsIsRegisteredClass = GetPointerLazy(
+        "JS_IsRegisteredClass"
+    );
+    #endregion
+    #region JS_GetRuntime
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static JsRuntime* JS_GetRuntime(JsContext* ctx)
+    {
+        //or ctx->rt;
+        return ((delegate* unmanaged<JsContext*, JsRuntime*>)_ptrJsGetRuntime.Value)(ctx);
+    }
+
+    private static readonly Lazy<nint> _ptrJsGetRuntime = GetPointerLazy("JS_GetRuntime");
+    #endregion
+    #region JS_NewClass
+
+    //int JS_NewClass(JSRuntime *rt, JSClassID class_id, const JSClassDef *class_def)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int JS_NewClass(JsRuntime* rt, JSClassID classId, JsClassDef* classDef)
+    {
+        return ((delegate* unmanaged<JsRuntime*, JSClassID, JsClassDef*, int>)_ptrJsNewClass.Value)(
+            rt,
+            classId,
+            classDef
+        );
+    }
+
+    private static readonly Lazy<nint> _ptrJsNewClass = GetPointerLazy("JS_NewClass");
+
+    #endregion
+    #region JS_NewObjectProtoClass
+    //JSValue JS_NewObjectProtoClass(JSContext *ctx, JSValueConst proto, JSClassID class_id)
+
+
+
+
     #endregion
 }
