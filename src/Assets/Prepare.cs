@@ -22,6 +22,14 @@ internal static class Prepare
         Directory.CreateDirectory(scripts);
         //if (!File.Exists(manifest))
         File.WriteAllText(manifest, PackManifest.Data);
+        if (Config.Data.DevMode)
+        {
+            var packageJsonPath = Path.Combine("plugins", "package.json");
+            if (!File.Exists(packageJsonPath))
+            {
+                File.WriteAllText(packageJsonPath, Npm.packageJson);
+            }
+        }
         File.WriteAllText(Path.Combine(scripts, EntryPointJsName), FailedScriptContent);
         PackHelper.AddPack(
             PackType.BehaviorPack,

@@ -90,7 +90,11 @@ public static partial class Manager
         if (ScriptLoadRequest is null)
         {
             foreach (
-                var js in Directory.EnumerateFiles(pluginsDir, "*.js", SearchOption.AllDirectories)
+                var js in Directory.EnumerateFiles(
+                    pluginsDir,
+                    "*.js",
+                    SearchOption.TopDirectoryOnly
+                )
             )
             {
                 LoadScript(js);

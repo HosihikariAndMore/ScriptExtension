@@ -13,6 +13,13 @@ internal static class Config
         public bool EnableLogger { get; set; } = true;
 
         public ConfigModules BuildInModules { get; set; } = new();
+        public bool DevMode { get; set; } =
+#if DEBUG
+            true
+#else
+            false
+#endif
+        ;
     }
 
     internal class ConfigModules
