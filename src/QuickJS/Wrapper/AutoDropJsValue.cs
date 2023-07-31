@@ -1,7 +1,6 @@
 ﻿using Hosihikari.VanillaScript.QuickJS.Extensions;
 using Hosihikari.VanillaScript.QuickJS.Types;
 using System.Runtime.CompilerServices;
-using Hosihikari.Minecraft.Extension;
 
 namespace Hosihikari.VanillaScript.QuickJS.Wrapper;
 

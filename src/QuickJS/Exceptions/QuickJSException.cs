@@ -1,5 +1,4 @@
 ﻿using Hosihikari.VanillaScript.QuickJS.Wrapper;
-using System.Linq;
 
 namespace Hosihikari.VanillaScript.QuickJS.Exceptions;
 

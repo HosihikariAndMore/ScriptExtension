@@ -1,8 +1,5 @@
 ﻿using System.Collections;
 using System.Diagnostics;
-using Hosihikari.VanillaScript.QuickJS;
-using Hosihikari.VanillaScript.QuickJS.Extensions;
-using Hosihikari.VanillaScript.QuickJS.Types;
 using Hosihikari.VanillaScript.QuickJS.Wrapper;
 
 namespace Hosihikari.VanillaScript.Loader;
