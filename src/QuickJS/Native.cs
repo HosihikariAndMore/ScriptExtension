@@ -764,6 +764,25 @@ static JSValue JS_CallFree(JSContext *ctx, JSValue func_obj, JSValueConst this_o
 
     private static readonly Lazy<nint> _ptrJsNewArray = GetPointerLazy("JS_NewArray");
     #endregion
+
+    #region JS_ArraySpeciesCreate
+    //   static JSValue JS_ArraySpeciesCreate(JSContext* ctx, JSValueConst obj,JSValueConst len_val)
+    public static AutoDropJsValue JS_ArraySpeciesCreate(JsContext* ctx, JsValue obj, int len)
+    {
+        var func = (delegate* unmanaged<JsContext*, JsValue, JsValue, JsValue>)
+            _ptrJsArraySpeciesCreate.Value;
+        var lenVal = JsValueCreateHelper.NewInt32(len);
+        var result = func(ctx, obj, lenVal);
+        if (result.IsException())
+            ThrowPendingException(ctx);
+        return new AutoDropJsValue(result, ctx);
+    }
+
+    private static readonly Lazy<nint> _ptrJsArraySpeciesCreate = GetPointerLazy(
+        "JS_ArraySpeciesCreate"
+    );
+
+    #endregion
     #region JS_SetPropertyUint32
     /*int JS_SetPropertyUint32(JSContext *ctx, JSValueConst this_obj,
                          uint32_t idx, JSValue val)*/
@@ -831,10 +850,23 @@ static JSValue JS_CallFree(JSContext *ctx, JSValue func_obj, JSValueConst this_o
     #region JS_NewClassID
     //JSClassID JS_NewClassID(JSClassID *pclass_id);
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static JsClassId JS_NewClassID()
+    public static JsClassId JS_NewClassID(JsRuntime* rt)
     {
         JsClassId classId = new() { Id = 0 };
-        ((delegate* unmanaged<JsClassId*, JsClassId>)_ptrJsNewClassId.Value)(&classId);
+
+#if DEBUG
+        var result =
+#endif
+
+        (
+            (delegate* unmanaged<JsRuntime*, JsClassId*, JsClassId>)_ptrJsNewClassId.Value
+        )(rt, &classId);
+#if DEBUG
+        if (result != classId)
+        {
+            throw new InvalidOperationException("JS_NewClassID failed");
+        }
+#endif
         return classId;
     }
 
@@ -940,5 +972,34 @@ static JSValue JS_CallFree(JSContext *ctx, JSValue func_obj, JSValueConst this_o
     }
 
     private static readonly Lazy<nint> _ptrJsGetClassProto = GetPointerLazy("JS_GetClassProto");
+    #endregion
+
+    #region js_object___getClass
+    /*
+     static JSValue js_object___getClass(JSContext *ctx, JSValueConst this_val,
+                                    int argc, JSValueConst *argv)
+     */
+    /* return an empty string if not an object */
+    public static string JS_GetClassName(JsContext* ctx, JsValue value)
+    {
+        //var func = (delegate* unmanaged<JsContext*, JsValue, int, JsValue*, JsValue>)
+        //    _ptrJsGetClassName.Value;
+        //var thisObj = JsValueCreateHelper.Undefined;
+        //var result = func(ctx, thisObj, 1, &value);
+        //if (result.IsException())
+        //    ThrowPendingException(ctx);
+        //using var autoDrop = new AutoDropJsValue(result, ctx);
+        //return autoDrop.ToString();
+        if (value.IsObject())
+        {
+            using var constructor = value.GetProperty(ctx, "constructor");
+            if (constructor.Value.IsObject())
+                return constructor.GetStringProperty("name");
+        }
+        return string.Empty;
+    }
+
+    //private static readonly Lazy<nint> _ptrJsGetClassName = GetPointerLazy("js_object___getClass");
+
     #endregion
 }

@@ -3,9 +3,11 @@ using System.Text;
 using Hosihikari.Logging;
 using Hosihikari.VanillaScript.Assets;
 using Hosihikari.VanillaScript.QuickJS;
+using Hosihikari.VanillaScript.QuickJS.Exceptions;
 using Hosihikari.VanillaScript.QuickJS.Extensions;
 using Hosihikari.VanillaScript.QuickJS.Helper;
 using Hosihikari.VanillaScript.QuickJS.Types;
+using Hosihikari.VanillaScript.Scripting;
 
 namespace Hosihikari.VanillaScript.Hook.JsLog;
 
@@ -180,10 +182,40 @@ internal class JsLog
 
     static unsafe string ParseLog(JsContext* ctx, ReadOnlySpan<JsValue> argv)
     {
+        if (argv.Length == 0)
+        {
+            return "[empty]";
+        }
         var sb = new StringBuilder();
         foreach (var arg in argv)
         {
-            sb.Append(arg.ToString(ctx));
+            if (
+                arg.Tag == JsTag.Object
+                && arg.GetClassName(ctx) is var className
+                && !string.IsNullOrWhiteSpace(className)
+            )
+            {
+                sb.Append('<');
+                sb.Append(className);
+                sb.Append('>');
+                if (className == "Player")
+                {
+                    if (McQuickJs.JsValueToPlayer(ctx, arg, out var player))
+                    {
+                        sb.Append('[');
+                        sb.Append(player.Name);
+                        sb.Append(']');
+                    }
+                }
+                else
+                {
+                    sb.Append(arg.ToString(ctx));
+                }
+            }
+            else
+            {
+                sb.Append(arg.ToString(ctx));
+            }
             if (arg.Tag == JsTag.Object && Native.JS_IsError(ctx, arg))
             {
                 sb.AppendLine();

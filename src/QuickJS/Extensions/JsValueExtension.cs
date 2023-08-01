@@ -1,5 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using Hosihikari.VanillaScript.QuickJS.Types;
+using Hosihikari.VanillaScript.QuickJS.Wrapper;
 
 namespace Hosihikari.VanillaScript.QuickJS.Extensions;
 
@@ -117,6 +118,15 @@ public static class JsValueExtension
         return Native.JS_ToCString(ctx, val.Value);
     }
 
+    public static unsafe AutoDropJsValue GetProperty(
+        this JsValue @this,
+        JsContext* ctx,
+        string propertyName
+    )
+    {
+        return Native.JS_GetPropertyStr(ctx, @this, propertyName);
+    }
+
     //JS_ToString
     public static unsafe string ToString(this JsValue @this, JsContext* ctx)
     {
@@ -170,5 +180,10 @@ public static class JsValueExtension
     public static unsafe string ToJson(this JsValue @this, JsContext* ctx)
     {
         return Native.JS_JSONStringify(ctx, @this);
+    }
+
+    public static unsafe string GetClassName(this JsValue @this, JsContext* ctx)
+    {
+        return Native.JS_GetClassName(ctx, @this);
     }
 }

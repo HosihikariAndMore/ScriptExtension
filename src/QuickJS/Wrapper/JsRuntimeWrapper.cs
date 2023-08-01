@@ -1,6 +1,7 @@
 ﻿using Hosihikari.VanillaScript.QuickJS.Types;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
+using Hosihikari.NativeInterop.Utils;
 using Hosihikari.VanillaScript.Loader;
 
 namespace Hosihikari.VanillaScript.QuickJS.Wrapper;
@@ -62,4 +63,40 @@ public class JsRuntimeWrapper
             pinedItem.Free();
         }
     }
+
+    public JsClassId NewClass(string name)
+    {
+        unsafe
+        {
+            //Native.JS_IsRegisteredClass()
+            var id = Native.JS_NewClassID(Runtime);
+            fixed (byte* namePtr = StringUtils.StringToManagedUtf8(name))
+            {
+                var def = new JsClassDef { ClassName = namePtr, };
+            }
+            //Native.JS_NewClass(Runtime, id,)
+            return id;
+        }
+    }
+
+    private readonly Dictionary<string, JsClassId> _classIdToName = new();
+#if DEBUG
+    public IEnumerable<string> AllClassName => _classIdToName.Keys;
+
+    public bool TryGetClassId(string className, out JsClassId id)
+    {
+        return _classIdToName.TryGetValue(className, out id);
+    }
+
+    public unsafe void AddClassInfo(JsClassId id, JsClassDef* def)
+    {
+        if (
+            Marshal.PtrToStringUTF8((nint)def->ClassName) is { } className
+            && !string.IsNullOrWhiteSpace(className)
+        )
+        {
+            _classIdToName[className] = id;
+        }
+    }
+#endif
 }

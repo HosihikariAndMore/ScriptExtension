@@ -13,6 +13,10 @@ public unsafe ref struct JsClassDef
     //    JSClassGCMark* gc_mark;
     //typedef void JSClassGCMark(JSRuntime *rt, JSValueConst val,JS_MarkFunc* mark_func);
     //typedef void JS_MarkFunc(JSRuntime* rt, JSGCObjectHeader* gp);
+    /// <summary>
+    /// mark all JsValue owned by current object
+    /// call Js_MarkValue in this function
+    /// </summary>
     public delegate* unmanaged<
         JsRuntime*,
         JsValue,

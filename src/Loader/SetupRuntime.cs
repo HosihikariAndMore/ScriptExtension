@@ -6,8 +6,14 @@ public static partial class Manager
 {
     public static event Action<JsRuntimeWrapper>? OnRuntimeCreated;
 
-    internal static void SetupRuntime(JsRuntimeWrapper ctx)
+    internal static void SetupRuntime(JsRuntimeWrapper rt)
     {
-        OnRuntimeCreated?.Invoke(ctx);
+        RegisterClass(rt);
+        OnRuntimeCreated?.Invoke(rt);
+    }
+
+    private static void RegisterClass(JsRuntimeWrapper rt)
+    {
+        // rt.NewClass();
     }
 }

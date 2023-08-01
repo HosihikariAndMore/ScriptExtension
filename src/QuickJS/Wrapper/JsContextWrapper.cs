@@ -11,6 +11,16 @@ public class JsContextWrapper
     public unsafe JsContext* Context { get; }
     private readonly List<GCHandle> _savedObject = new();
     public event Action? FreeContextCallback;
+    public JsRuntimeWrapper Runtime
+    {
+        get
+        {
+            unsafe
+            {
+                return JsRuntimeWrapper.FetchOrCreate(Native.JS_GetRuntime(Context));
+            }
+        }
+    }
 
     internal void Pin(object obj)
     {
@@ -259,4 +269,13 @@ public class JsContextWrapper
     {
         return Native.JS_NewCFunction2(Context, func, name, argumentLength, protoType, 0);
     }
+
+    //public AutoDropJsValue NewObject(JsClassId classId, nint opaque)
+    //{
+    //    unsafe
+    //    {
+    //        var instance = Native.JS_NewObjectClass(Context, classId);
+    //        Native.SetOpaque(instance, opaque);
+    //    }
+    //}
 }
