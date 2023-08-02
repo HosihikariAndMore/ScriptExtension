@@ -16,5 +16,9 @@ public static partial class Manager
         {
             Modules.IO.Main.Setup(ctx);
         }
+        if (Config.Data.BuildInModules.AllowClr)
+        {
+            Modules.Clr.Main.Setup(ctx);
+        }
     }
 }

@@ -8,12 +8,12 @@ typedef struct JSPropertyEnum {
     JSAtom atom;
 } JSPropertyEnum;
  */
-[StructLayout(LayoutKind.Sequential)]
+[StructLayout(LayoutKind.Sequential, Size = 8)]
 public struct JsPropertyEnum
 {
     [MarshalAs(UnmanagedType.I4)]
     public bool IsEnumerable;
 
     [MarshalAs(UnmanagedType.U4)]
-    public uint Atom;
+    public JsAtom Atom;
 }

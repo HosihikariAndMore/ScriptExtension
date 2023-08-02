@@ -1,8 +1,10 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Hosihikari.VanillaScript.Loader;
 using Hosihikari.VanillaScript.QuickJS.Helper;
 using Hosihikari.VanillaScript.QuickJS.Types;
+using static Hosihikari.VanillaScript.QuickJS.Types.JsClassDef;
 
 namespace Hosihikari.VanillaScript.QuickJS.Wrapper;
 
@@ -182,6 +184,16 @@ public class JsContextWrapper
         }
     }
 
+    //public AutoDropJsValue NewObject(JsClassId classId, nint opaque)
+    //{
+    //    unsafe
+    //    {
+    //        var result = JsValueCreateHelper.NewObject(Context, classId);
+    //        Native.JS_SetOpaque(result.Value, opaque);
+    //        return result;
+    //    }
+    //}
+
     public AutoDropJsValue NewString(string str)
     {
         unsafe
@@ -206,9 +218,22 @@ public class JsContextWrapper
     );
 
     /// <summary>
+    /// memory safe
+    /// will auto free when related JsValue free
+    /// </summary>
+    /// <param name="func"></param>
+    /// <returns></returns>
+    public AutoDropJsValue NewJsFunctionObject(JsNativeFunctionDelegate func)
+    {
+        return NewFunctionObject(new ClrFunctionProxyInstance(func));
+    }
+
+    /// <summary>
     /// Note: at least 'length' arguments will be readable in 'argv'
     /// Dot not call frequently, it will be free only when context free,
+    ///     only use this for module init function that only called once each context.
     ///     so it would be better to use <see cref="NewStaticJsFunction"/> instead if used for some callback.
+    ///     or use <see cref="NewJsFunctionObject"/> for dynamic call, it could be free automatically when no longer use in js.
     /// </summary>
     public AutoDropJsValue NewJsFunction(
         string name,
@@ -270,12 +295,132 @@ public class JsContextWrapper
         return Native.JS_NewCFunction2(Context, func, name, argumentLength, protoType, 0);
     }
 
-    //public AutoDropJsValue NewObject(JsClassId classId, nint opaque)
-    //{
-    //    unsafe
-    //    {
-    //        var instance = Native.JS_NewObjectClass(Context, classId);
-    //        Native.SetOpaque(instance, opaque);
-    //    }
-    //}
+    public AutoDropJsValue NewObject<T>(T data)
+        where T : ClrProxyBase
+    {
+        unsafe
+        {
+            if (!_typeClassIdCache.TryGetValue(typeof(ClrProxyBase), out var classId))
+                classId = RegisterClrObjectClassInternal(); //register class if not exists
+            var result = JsValueCreateHelper.NewObject(Context, classId);
+            var opaque = GCHandle.ToIntPtr(GCHandle.Alloc(data));
+            Native.JS_SetOpaque(result.Value, opaque);
+            return result;
+        }
+    }
+
+    public AutoDropJsValue NewFunctionObject<T>(T data)
+        where T : ClrFunctionProxyBase
+    {
+        unsafe
+        {
+            if (!_typeClassIdCache.TryGetValue(typeof(ClrFunctionProxyBase), out var classId))
+                classId = RegisterClrFunctionClassInternal(); //register class if not exists
+            var result = JsValueCreateHelper.NewObject(Context, classId);
+            var opaque = GCHandle.ToIntPtr(GCHandle.Alloc(data));
+            Native.JS_SetOpaque(result.Value, opaque);
+            return result;
+        }
+    }
+
+    private readonly Dictionary<Type, JsClassId> _typeClassIdCache = new();
+
+    #region AutoRegister
+    private JsClassId RegisterClrObjectClassInternal()
+    {
+        unsafe
+        {
+            return RegisterClass<ClrProxyBase>(
+                "ClrObjectProxy",
+                new JsClassDef
+                {
+                    Call = &ClrFunctionProxyBase.JsClassCall,
+                    Finalizer = &ClrFunctionProxyBase.JsClassFinalizer,
+                    GcMark = &ClrProxyBase.JsClassGcMark,
+                    Exotic = (JsClassExoticMethods*)
+                        ClrProxyBase.JsClassExoticMethods.Value.ToPointer()
+                }
+            );
+        }
+    }
+
+    private JsClassId RegisterClrFunctionClassInternal()
+    {
+        unsafe
+        {
+            return RegisterClass<ClrFunctionProxyBase>(
+                "ClrFunctionProxy",
+                new JsClassDef
+                {
+                    Call = &ClrFunctionProxyBase.JsClassCall,
+                    Finalizer = &ClrFunctionProxyBase.JsClassFinalizer,
+                    GcMark = &ClrProxyBase.JsClassGcMark,
+                }
+            );
+        }
+    }
+
+    private JsClassId RegisterClass<T>(string name, JsClassDef classDef)
+        where T : ClrFunctionProxyBase
+    {
+        Runtime.TryGetClassId(name, out var id); //get old id
+        var item = Runtime.NewRegisterClass(name, classDef, id);
+        _typeClassIdCache[typeof(T)] = item;
+        return item;
+    }
+    #endregion
+
+    public AutoDropJsValue NewObject(JsClassId classId, nint opaque)
+    {
+        unsafe
+        {
+            var instance = Native.JS_NewObjectClass(Context, classId);
+            Native.JS_SetOpaque(instance.Value, opaque);
+            return instance;
+        }
+    }
+
+    public JsValue ThrowJsError(Exception exception)
+    {
+        unsafe
+        {
+            return Native.JS_ThrowInternalError(Context, exception);
+        }
+    }
+
+    public AutoDropJsAtom NewAtom(string name)
+    {
+        unsafe
+        {
+            return Native.JS_NewAtom(Context, name);
+        }
+    }
+
+    public AutoDropJsValue NewArray<T>(IEnumerable<T> data)
+        where T : unmanaged
+    {
+        return NewArray(data.ToArray()); //todo : optimize use js iterator
+    }
+
+    public AutoDropJsValue NewArray(IEnumerable<string> data)
+    {
+        return NewArray(data.ToArray()); //todo : optimize use js iterator
+    }
+
+    public AutoDropJsValue NewArray<T>(T[] data)
+        where T : unmanaged
+    {
+        unsafe
+        {
+            return JsValueCreateHelper.NewArray<T>(Context, data);
+        }
+    }
+
+    public AutoDropJsValue NewArray(string[] data)
+    {
+        unsafe
+        {
+            return JsValueCreateHelper.NewArray(Context, data);
+        }
+    }
 }

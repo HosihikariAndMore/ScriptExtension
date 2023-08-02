@@ -17,7 +17,7 @@ internal static class JsValueCreateHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool NewUnmanagedInternal<T>(T val, [NotNullWhen(true)] out JsValue? jsValue)
+    private static bool NewUnmanagedInternal(object? val, [NotNullWhen(true)] out JsValue? jsValue)
     {
         //match all unmanaged types
         jsValue = val switch
@@ -35,6 +35,32 @@ internal static class JsValueCreateHelper
             float f => NewFloat64(f),
             double d => NewFloat64(d),
             decimal dec => NewFloat64((double)dec),
+            null => Null,
+            _ => null
+        };
+        return jsValue is not null;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool NewUnmanagedInternal<T>(T? val, [NotNullWhen(true)] out JsValue? jsValue)
+    {
+        //match all unmanaged types
+        jsValue = val switch
+        {
+            bool b => NewBool(b),
+            char c => NewCatchOffset(c),
+            byte b => NewInt32(b),
+            sbyte sb => NewInt32(sb),
+            short s => NewInt32(s),
+            ushort us => NewInt32(us),
+            int i => NewInt32(i),
+            uint ui => NewUint32(ui),
+            long l => NewInt64(l),
+            ulong ul => NewFloat64(ul),
+            float f => NewFloat64(f),
+            double d => NewFloat64(d),
+            decimal dec => NewFloat64((double)dec),
+            null => Null,
             _ => null
         };
         return jsValue is not null;
@@ -43,6 +69,12 @@ internal static class JsValueCreateHelper
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool NewUnmanaged<T>(T val, [NotNullWhen(true)] out JsValue? jsValue)
         where T : unmanaged
+    {
+        return NewUnmanagedInternal(val, out jsValue);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool NewUnmanaged(object val, [NotNullWhen(true)] out JsValue? jsValue)
     {
         return NewUnmanagedInternal(val, out jsValue);
     }
@@ -59,7 +91,48 @@ internal static class JsValueCreateHelper
         throw new NotImplementedException($"new {typeof(T)} is not support");
     }
 
-    public static unsafe AutoDropJsValue New<T>(T val, JsContext* ctx)
+    public static AutoDropJsValue New(object? val, JsContextWrapper ctx)
+    {
+        unsafe
+        {
+            return New(val, ctx.Context);
+        }
+    }
+
+    public static AutoDropJsValue New<T>(T? val, JsContextWrapper ctx)
+    {
+        unsafe
+        {
+            return New(val, ctx.Context);
+        }
+    }
+
+    public static unsafe AutoDropJsValue New(object? val, JsContext* ctx)
+    {
+        if (NewUnmanagedInternal(val, out var jsValue))
+        {
+            return new AutoDropJsValue(jsValue.Value, ctx);
+        }
+        return val switch
+        {
+            string s => NewString(ctx, s),
+            string[] ss => NewArray(ctx, ss),
+            byte[] cc => NewArray(ctx, cc),
+            sbyte[] sb => NewArray(ctx, sb),
+            short[] ss => NewArray(ctx, ss),
+            ushort[] us => NewArray(ctx, us),
+            int[] ii => NewArray(ctx, ii),
+            uint[] ui => NewArray(ctx, ui),
+            long[] ll => NewArray(ctx, ll),
+            ulong[] ul => NewArray(ctx, ul),
+            float[] ff => NewArray(ctx, ff),
+            double[] dd => NewArray(ctx, dd),
+            decimal[] dec => NewArray(ctx, dec),
+            _ => throw new NotImplementedException($"new {val.GetType()} is not support")
+        };
+    }
+
+    public static unsafe AutoDropJsValue New<T>(T? val, JsContext* ctx)
     {
         if (NewUnmanagedInternal(val, out var jsValue))
         {
@@ -288,6 +361,12 @@ internal static class JsValueCreateHelper
     public static unsafe AutoDropJsValue NewObject(JsContext* ctx)
     {
         return Native.JS_NewObject(ctx);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe AutoDropJsValue NewObject(JsContext* ctx, JsClassId classId)
+    {
+        return Native.JS_NewObjectClass(ctx, classId);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

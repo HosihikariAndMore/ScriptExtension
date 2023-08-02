@@ -662,6 +662,25 @@ else
         "JS_GetScriptOrModuleName"
     );
     #endregion
+
+    #region JS_NewAtom
+    //JSAtom JS_NewAtomLen(JSContext *ctx, const char *str, size_t len)
+    public static AutoDropJsAtom JS_NewAtom(JsContext* ctx, string str)
+    {
+        var func = (delegate* unmanaged<JsContext*, byte*, nuint, JsAtom>)_ptrJsNewAtomLen.Value;
+        fixed (byte* ptr = StringUtils.StringToManagedUtf8(str, out var len))
+        {
+            var result = func(ctx, ptr, (nuint)len);
+            if (result == JsAtom.BuildIn.Null)
+            {
+                ThrowPendingException(ctx);
+            }
+            return new AutoDropJsAtom(result, ctx);
+        }
+    }
+
+    private static readonly Lazy<nint> _ptrJsNewAtomLen = GetPointerLazy("JS_NewAtomLen");
+    #endregion
     #region JS_AtomToCString
     //const char *JS_AtomToCString(JSContext *ctx, JSAtom atom)
     public static string JS_AtomToCString(JsContext* ctx, JsAtom atom)
@@ -829,13 +848,34 @@ static JSValue JS_CallFree(JSContext *ctx, JSValue func_obj, JSValueConst this_o
         finally
         {
             //free ptab
-            js_free(ctx, ptab);
+            js_free_prop_enum(ctx, ptab, plen);
         }
     }
 
     private static readonly Lazy<nint> _ptrJsGetOwnPropertyNames = GetPointerLazy(
         "JS_GetOwnPropertyNames"
     );
+    #endregion
+
+    #region js_free_prop_enum
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void js_free_prop_enum(JsContext* ctx, JsPropertyEnum* ptab, uint plen)
+    {
+        //uint32_t i;
+        //if (tab)
+        //{
+        //    for (i = 0; i < len; i++)
+        //        JS_FreeAtom(ctx, tab[i].atom);
+        //    js_free(ctx, tab);
+        //}
+        (
+            (delegate* unmanaged<JsContext*, JsPropertyEnum*, uint, void>)_ptrJsFreePropEnum.Value
+        )(ctx, ptab, plen);
+    }
+
+    private static Lazy<nint> _ptrJsFreePropEnum = GetPointerLazy("js_free_prop_enum");
+
     #endregion
     #region js_free
     //void js_free(JSContext *ctx, void *ptr)
@@ -846,6 +886,24 @@ static JSValue JS_CallFree(JSContext *ctx, JSValue func_obj, JSValueConst this_o
     }
 
     private static readonly Lazy<nint> _ptrJsFree = GetPointerLazy("js_free");
+    #endregion
+
+    #region js_ma
+    /*
+       tab_atom = js_malloc(ctx, sizeof(tab_atom[0]) * max_int(atom_count, 1));
+    if (!tab_atom)
+    {
+        js_free_prop_enum(ctx, tab_exotic, exotic_count);
+        return -1;
+    }
+     */
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void* js_malloc(JsContext* ctx, size_t size)
+    {
+        return ((delegate* unmanaged<JsContext*, size_t, void*>)_ptrJsMalloc.Value)(ctx, size);
+    }
+
+    private static readonly Lazy<nint> _ptrJsMalloc = GetPointerLazy("js_malloc");
     #endregion
     #region JS_NewClassID
     //JSClassID JS_NewClassID(JSClassID *pclass_id);
@@ -902,14 +960,13 @@ static JSValue JS_CallFree(JSContext *ctx, JSValue func_obj, JSValueConst this_o
 
     //int JS_NewClass(JSRuntime *rt, JSClassID class_id, const JSClassDef *class_def)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int JS_NewClass(JsRuntime* rt, JsClassId classId, JsClassDef* classDef)
+    public static void JS_NewClass(JsRuntime* rt, JsClassId classId, JsClassDef* classDef)
     {
         var result = (
             (delegate* unmanaged<JsRuntime*, JsClassId, JsClassDef*, int>)_ptrJsNewClass.Value
         )(rt, classId, classDef);
         if (result != 0)
             throw new Exception("JS_NewClass failed");
-        return result;
     }
 
     private static readonly Lazy<nint> _ptrJsNewClass = GetPointerLazy("JS_NewClass");
@@ -925,14 +982,14 @@ static JSValue JS_CallFree(JSContext *ctx, JSValue func_obj, JSValueConst this_o
 
     //  JSValue JS_NewObjectClass(JSContext* ctx, int class_id)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static JsValue JS_NewObjectClass(JsContext* ctx, JsClassId classId)
+    public static AutoDropJsValue JS_NewObjectClass(JsContext* ctx, JsClassId classId)
     {
         var result = (
             (delegate* unmanaged<JsContext*, JsClassId, JsValue>)_ptrJsNewObjectClass.Value
         )(ctx, classId);
         if (result.IsException())
             ThrowPendingException(ctx);
-        return result;
+        return new AutoDropJsValue(result, ctx);
     }
 
     private static readonly Lazy<nint> _ptrJsNewObjectClass = GetPointerLazy("JS_NewObjectClass");
@@ -1001,5 +1058,47 @@ static JSValue JS_CallFree(JSContext *ctx, JSValue func_obj, JSValueConst this_o
 
     //private static readonly Lazy<nint> _ptrJsGetClassName = GetPointerLazy("js_object___getClass");
 
+    #endregion
+
+    #region JS_GetOpaqueWithoutClass
+
+    public static nint JS_GetOpaqueWithoutClass(JsValue val)
+    {
+        return ((delegate* unmanaged<JsValue, nint>)_ptrJsGetOpaqueWithoutClass.Value)(val);
+    }
+
+    private static readonly Lazy<nint> _ptrJsGetOpaqueWithoutClass = GetPointerLazy(
+        "JS_GetOpaqueWithoutClass"
+    );
+    #endregion
+    #region JS_GetOpaque
+    public static nint JS_GetOpaque(JsValue val, JsClassId id)
+    {
+        return ((delegate* unmanaged<JsValue, JsClassId, nint>)_ptrJsGetOpaque.Value)(val, id);
+    }
+
+    private static readonly Lazy<nint> _ptrJsGetOpaque = GetPointerLazy("JS_GetOpaque");
+    #endregion
+    #region JS_GetOpaque2
+
+    public static nint JS_GetOpaque2(JsContext* ctx, JsValue val, JsClassId id)
+    {
+        return ((delegate* unmanaged<JsContext*, JsValue, JsClassId, nint>)_ptrJsGetOpaque2.Value)(
+            ctx,
+            val,
+            id
+        );
+    }
+
+    private static readonly Lazy<nint> _ptrJsGetOpaque2 = GetPointerLazy("JS_GetOpaque2");
+    #endregion
+    #region JS_SetOpaque
+
+    public static void JS_SetOpaque(JsValue val, nint opaque)
+    {
+        ((delegate* unmanaged<JsValue, nint, void>)_ptrJsSetOpaque.Value)(val, opaque);
+    }
+
+    private static readonly Lazy<nint> _ptrJsSetOpaque = GetPointerLazy("JS_SetOpaque");
     #endregion
 }

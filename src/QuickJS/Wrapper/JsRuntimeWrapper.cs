@@ -64,23 +64,27 @@ public class JsRuntimeWrapper
         }
     }
 
-    public JsClassId NewClass(string name)
+    public JsClassId NewRegisterClass(string name, JsClassDef def, JsClassId id = default)
     {
         unsafe
         {
-            //Native.JS_IsRegisteredClass()
-            var id = Native.JS_NewClassID(Runtime);
-            fixed (byte* namePtr = StringUtils.StringToManagedUtf8(name))
-            {
-                var def = new JsClassDef { ClassName = namePtr, };
+            if (id.Id == 0)
+            { //generate new id
+                id = Native.JS_NewClassID(Runtime);
             }
-            //Native.JS_NewClass(Runtime, id,)
+            if (!Native.JS_IsRegisteredClass(Runtime, id))
+            {
+                fixed (byte* namePtr = StringUtils.StringToManagedUtf8(name))
+                {
+                    def.ClassName = namePtr;
+                    Native.JS_NewClass(Runtime, id, &def);
+                }
+            }
             return id;
         }
     }
 
     private readonly Dictionary<string, JsClassId> _classIdToName = new();
-#if DEBUG
     public IEnumerable<string> AllClassName => _classIdToName.Keys;
 
     public bool TryGetClassId(string className, out JsClassId id)
@@ -98,5 +102,4 @@ public class JsRuntimeWrapper
             _classIdToName[className] = id;
         }
     }
-#endif
 }

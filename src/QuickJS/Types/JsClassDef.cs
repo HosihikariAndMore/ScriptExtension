@@ -33,13 +33,20 @@ public unsafe ref struct JsClassDef
     ///       constructor call only happens if the object constructor bit is
     ///       set (see JS_SetConstructorBit()).
     /// </summary>
-    public delegate* unmanaged<JsContext*, JsValue, JsValue, int, JsValue*, int, JsValue> Call;
+    public delegate* unmanaged<
+        JsContext*,
+        JsValue,
+        JsValue,
+        int,
+        JsValue*,
+        JsCallFlag,
+        JsValue> Call;
 
     public JsClassExoticMethods* Exotic;
 
     #region JsClassExoticMethods
     //typedef struct JSClassExoticMethods
-    public ref struct JsClassExoticMethods
+    public struct JsClassExoticMethods
     {
         //    int (* get_own_property) (JSContext* ctx, JSPropertyDescriptor* desc,
         //        JSValueConst obj, JSAtom prop);

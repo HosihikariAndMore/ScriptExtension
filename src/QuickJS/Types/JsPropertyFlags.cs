@@ -1,4 +1,6 @@
-﻿namespace Hosihikari.VanillaScript.QuickJS.Types;
+﻿using System.Runtime.InteropServices;
+
+namespace Hosihikari.VanillaScript.QuickJS.Types;
 
 /// <summary>
 /// JS_PROP_* flags for object properties.

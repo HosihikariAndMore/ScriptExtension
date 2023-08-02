@@ -26,14 +26,14 @@ public static class ArgumentCheckExtension
     /// <param name="this"></param>
     /// <param name="allAllowCount"></param>
     /// <exception cref="ArgumentException"></exception>
-    public static void InsureArgumentCount(
+    public static int InsureArgumentCount(
         this ReadOnlySpan<JsValue> @this,
         params int[] allAllowCount
     )
     {
         if (allAllowCount.Contains(@this.Length))
         {
-            return;
+            return @this.Length;
         }
         throw new ArgumentException(
             $"too many arguments, expected {string.Join(" or ", allAllowCount)}, got {@this.Length}"

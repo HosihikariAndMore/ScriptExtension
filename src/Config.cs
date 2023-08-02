@@ -27,6 +27,10 @@ internal static class Config
 
         [JsonPropertyName(FileIoModuleName)]
         public bool FileIo { get; set; } = true;
+        public const string ClrModuleName = "@hosihikari/clr";
+
+        [JsonPropertyName(ClrModuleName)]
+        public bool AllowClr { get; set; } = true;
     }
 
     internal static ConfigData Data { get; private set; }
