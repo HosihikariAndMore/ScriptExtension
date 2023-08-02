@@ -120,8 +120,8 @@ internal class StaticTypeProxy : ClrProxyBase, IDisposable
         { //todo fix this
             data = new JsPropertyDescriptor
             {
-                Flags = JsPropertyFlags.HasGet,
-                Getter = ctxInstance
+                Flags = JsPropertyFlags.HasValue,
+                Value = ctxInstance
                     .NewJsFunctionObject(
                         (_, thisObj, argv) =>
                         {
