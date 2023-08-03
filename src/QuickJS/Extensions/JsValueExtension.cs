@@ -1,4 +1,8 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using Hosihikari.VanillaScript.QuickJS.Exceptions;
 using Hosihikari.VanillaScript.QuickJS.Types;
 using Hosihikari.VanillaScript.QuickJS.Wrapper;
 
@@ -186,4 +190,185 @@ public static class JsValueExtension
     {
         return Native.JS_GetClassName(ctx, @this);
     }
+
+    #region Converter
+
+
+
+    public static bool ToBoolean(this JsValue @this)
+    {
+        if (TryGetBoolean(@this, out var result))
+        {
+            return result;
+        }
+        throw new InvalidCastException(@this.Tag.ToString());
+    }
+
+    public static bool TryGetBoolean(this JsValue @this, out bool value)
+    {
+        if (@this.Tag == JsTag.Bool)
+        {
+            value = @this.int32 != 0;
+            return true;
+        }
+        value = default;
+        return false;
+    }
+
+    public static int ToInt32(this JsValue @this)
+    {
+        if (TryGetInt32(@this, out var result))
+        {
+            return result;
+        }
+        throw new InvalidCastException(@this.Tag.ToString());
+    }
+
+    public static bool TryGetInt32(this JsValue @this, out int value)
+    {
+        if (@this.Tag == JsTag.Int)
+        {
+            value = @this.int32;
+            return true;
+        }
+        value = default;
+        return false;
+    }
+
+    public static object? ToClrObject(this JsValue @this, JsContextWrapper ctx, Type type)
+    {
+        unsafe
+        {
+            return ToClrObject(@this, ctx.Context, type);
+        }
+    }
+
+    public static double ToDouble(this JsValue @this)
+    {
+        if (TryGetDouble(@this, out var result))
+        {
+            return result;
+        }
+        throw new InvalidCastException(@this.Tag.ToString());
+    }
+
+    public static bool TryGetDouble(this JsValue @this, out double value)
+    {
+        if (@this.Tag == JsTag.Int)
+        {
+            value = @this.int32;
+            return true;
+        }
+        if (@this.Tag == JsTag.Float64)
+        {
+            value = @this.float64;
+            return true;
+        }
+        value = default;
+        return false;
+    }
+
+    public static unsafe object? ToClrObject(this JsValue @this, JsContext* ctx, Type type)
+    {
+        var value = ToClrObject(@this, ctx);
+        if (value is null)
+        {
+            return null;
+        }
+        if (value is JsonNode json)
+        {
+            return json.Deserialize(type);
+        }
+        if (type.IsInstanceOfType(value))
+        {
+            return value;
+        }
+        if (type.IsEnum)
+        {
+            return Enum.ToObject(type, value);
+        }
+        if (type == typeof(string))
+            return value.ToString();
+        if (type == typeof(bool))
+            return Convert.ToBoolean(value);
+        if (type == typeof(byte))
+            return Convert.ToByte(value);
+        if (type == typeof(sbyte))
+            return Convert.ToSByte(value);
+        if (type == typeof(char))
+            return Convert.ToChar(value);
+        if (type == typeof(decimal))
+            return Convert.ToDecimal(value);
+        if (type == typeof(double))
+            return Convert.ToDouble(value);
+        if (type == typeof(float))
+            return Convert.ToSingle(value);
+        if (type == typeof(int))
+            return Convert.ToInt32(value);
+        if (type == typeof(uint))
+            return Convert.ToUInt32(value);
+        if (type == typeof(long))
+            return Convert.ToInt64(value);
+        if (type == typeof(ulong))
+            return Convert.ToUInt64(value);
+        if (type == typeof(short))
+            return Convert.ToInt16(value);
+        if (type == typeof(ushort))
+            return Convert.ToUInt16(value);
+        if (type == typeof(DateTime))
+            return Convert.ToDateTime(value);
+        if (type == typeof(Guid))
+            return Guid.Parse(value.ToString() ?? throw new NullReferenceException());
+        if (type == typeof(TimeSpan))
+            return TimeSpan.Parse(value.ToString() ?? throw new NullReferenceException());
+        if (type == typeof(Uri))
+            return new Uri(value.ToString() ?? throw new NullReferenceException());
+        if (type == typeof(byte[]))
+        {
+            var val = value.ToString() ?? throw new NullReferenceException();
+            var bytes = new byte[val.Length / 2];
+            return Convert.TryFromBase64String(val, bytes, out var len)
+                ? bytes[..len].ToArray()
+                : Convert.FromHexString(value.ToString() ?? throw new NullReferenceException());
+        }
+        if (type == typeof(char[]))
+            return value.ToString()?.ToCharArray();
+        if (type == typeof(DateTimeOffset))
+            return DateTimeOffset.Parse(value.ToString() ?? throw new NullReferenceException());
+        throw new InvalidCastException($"can not convert {value.GetType()} to {type}");
+    }
+
+    //JS_ToFloat64
+    public static unsafe object? ToClrObject(this JsValue @this, JsContext* ctx)
+    {
+        switch (@this.Tag)
+        {
+            case JsTag.Bool:
+                return @this.ToBoolean();
+            case JsTag.Null
+            or JsTag.Undefined
+            or JsTag.Uninitialized:
+                return null;
+            case JsTag.String:
+                return @this.ToString(ctx);
+            case JsTag.Int:
+                return @this.ToInt32();
+            case JsTag.Float64:
+                return @this.ToDouble();
+            case JsTag.Exception:
+            case JsTag.Object when Native.JS_IsError(ctx, @this):
+                return new QuickJsException(@this, ctx);
+            case JsTag.FunctionBytecode:
+            case JsTag.Object when Native.JS_IsFunction(ctx, @this):
+                throw new NotImplementedException("js function to clr not impl");
+            //case JsTag.Object when Native.JS_IsArray(ctx, @this):
+            //    throw new NotImplementedException("js array to clr not impl");
+            case JsTag.Object:
+                var json = @this.ToJson(ctx);
+                return JsonNode.Parse(json);
+            default:
+                throw new NotImplementedException($"js value {@this.Tag} to clr not impl");
+        }
+    }
+    #endregion
 }

@@ -1,4 +1,6 @@
-﻿using Hosihikari.VanillaScript.QuickJS.Wrapper;
+﻿using Hosihikari.VanillaScript.QuickJS.Extensions;
+using Hosihikari.VanillaScript.QuickJS.Types;
+using Hosihikari.VanillaScript.QuickJS.Wrapper;
 
 namespace Hosihikari.VanillaScript.QuickJS.Exceptions;
 
@@ -7,6 +9,22 @@ public class QuickJsException : Exception
     public override string Message { get; }
     public string? Name { get; }
     public string? JsStack { get; }
+
+    internal unsafe QuickJsException(JsValue exceptionValue, JsContext* ctx)
+    {
+        if (Native.JS_IsError(ctx, exceptionValue))
+        {
+            //error delivered from js Error class
+            Message = exceptionValue.GetStringProperty(ctx, "message");
+            Name = exceptionValue.GetStringProperty(ctx, "name");
+            JsStack = exceptionValue.GetStringProperty(ctx, "stack").TrimEnd();
+        }
+        else
+        { //not standard error
+            //just convert to string
+            Message = exceptionValue.ToString(ctx);
+        }
+    }
 
     internal QuickJsException(AutoDropJsValue exceptionValue)
     {

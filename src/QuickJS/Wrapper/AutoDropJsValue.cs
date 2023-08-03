@@ -22,6 +22,9 @@ public class AutoDropJsValue : IDisposable
         }
     }
 
+    public unsafe AutoDropJsValue(JsValue value, JsContextWrapper context)
+        : this(value, context.Context) { }
+
     public unsafe AutoDropJsValue(JsValue value, JsContext* context)
     {
         _value = value;

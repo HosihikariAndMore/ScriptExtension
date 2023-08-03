@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using Hosihikari.VanillaScript.Hook.JsLog;
+using System.Runtime.InteropServices;
 
 namespace Hosihikari.VanillaScript.QuickJS.Types;
 

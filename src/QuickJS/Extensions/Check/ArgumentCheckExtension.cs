@@ -17,7 +17,23 @@ public static class ArgumentCheckExtension
         {
             return;
         }
-        throw new ArgumentException($"too many arguments, expected {count}, got {@this.Length}");
+
+        if (count == 0)
+        {
+            throw new ArgumentException($"too many arguments, expected none, got {@this.Length}");
+        }
+        if (count < @this.Length)
+        {
+            throw new ArgumentException(
+                $"too many arguments, expected {count}, got {@this.Length}"
+            );
+        }
+        if (count > @this.Length)
+        {
+            throw new ArgumentException(
+                $"not enough arguments, expected {count}, got {@this.Length}"
+            );
+        }
     }
 
     /// <summary>

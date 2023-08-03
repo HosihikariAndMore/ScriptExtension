@@ -21,19 +21,20 @@ public class ClrFunctionProxyInstance : ClrFunctionProxyBase
         JsCallFlag flags
     )
     {
-        if (flags is JsCallFlag.Default)
+        //check has JsCallFlag.Constructor
+        if (!Enum.IsDefined(typeof(JsCallFlag), flags))
         {
-            return Callback(ctxInstance, contextThis, argv);
+            return ctxInstance.ThrowJsError(
+                new NotImplementedException($"operation JsCallFlag {flags} unknown")
+            );
         }
-        else if (flags is JsCallFlag.Constructor)
+        if (((int)flags & (int)JsCallFlag.Constructor) == (int)JsCallFlag.Constructor)
         {
             return ctxInstance.ThrowJsError(
                 new InvalidOperationException("invalid constructor call")
             );
         }
-        return ctxInstance.ThrowJsError(
-            new NotImplementedException($"operation JsCallFlag {flags} unknown")
-        );
+        return Callback(ctxInstance, contextThis, argv);
     }
 }
 

@@ -43,7 +43,7 @@ public enum JsPropertyFlags
     /// <summary>
     /// None
     /// </summary>
-    Normal = 0 << 4,
+    Normal = 0,
 
     /// <summary>
     ///

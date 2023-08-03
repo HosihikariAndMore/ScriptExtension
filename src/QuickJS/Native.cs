@@ -161,12 +161,69 @@ else
     //JS_BOOL JS_IsError(JSContext *ctx, JSValueConst val);
     public static bool JS_IsError(JsContext* ctx, JsValue jsValue)
     {
-        var func = (delegate* unmanaged<JsContext*, JsValue, int>)_ptrJsIsError.Value;
-        return func(ctx, jsValue) != 0;
+        return ((delegate* unmanaged<JsContext*, JsValue, int>)_ptrJsIsError.Value)(ctx, jsValue)
+            != 0;
     }
 
     private static readonly Lazy<nint> _ptrJsIsError = GetPointerLazy("JS_IsError");
     #endregion
+
+    #region JS_IsFunction
+
+    public static bool JS_IsFunction(JsContext* ctx, JsValue @this)
+    {
+        return ((delegate* unmanaged<JsContext*, JsValue, int>)_ptrJsIsFunction.Value)(ctx, @this)
+            != 0;
+    }
+
+    private static readonly Lazy<nint> _ptrJsIsFunction = GetPointerLazy("JS_IsFunction");
+    #endregion
+
+    #region JS_IsCFunction
+
+    public static bool JS_IsCFunction(JsContext* ctx, JsValue @this, void* funcPtr, int magic)
+    {
+        return ((delegate* unmanaged<JsContext*, JsValue, void*, int, int>)_ptrJsIsCFunction.Value)(
+                ctx,
+                @this,
+                funcPtr,
+                magic
+            ) != 0;
+    }
+
+    private static readonly Lazy<nint> _ptrJsIsCFunction = GetPointerLazy("JS_IsCFunction");
+    #endregion
+
+    #region JS_IsConstructor
+
+    public static bool JS_IsConstructor(JsContext* ctx, JsValue @this)
+    {
+        return ((delegate* unmanaged<JsContext*, JsValue, int>)_ptrJsIsConstructor.Value)(
+                ctx,
+                @this
+            ) != 0;
+    }
+
+    private static readonly Lazy<nint> _ptrJsIsConstructor = GetPointerLazy("JS_IsConstructor");
+
+    #endregion
+
+    #region JS_SetConstructorBit
+
+    public static void JS_SetConstructorBit(JsContext* ctx, JsValue @this, bool val)
+    {
+        ((delegate* unmanaged<JsContext*, JsValue, byte, void>)_ptrJsSetConstructorBit.Value)(
+            ctx,
+            @this,
+            val ? (byte)1 : (byte)0
+        );
+    }
+
+    private static readonly Lazy<nint> _ptrJsSetConstructorBit = GetPointerLazy(
+        "JS_SetConstructorBit"
+    );
+    #endregion
+
     #region JS_GetPropertyStr
     public static AutoDropJsValue JS_GetPropertyStr(
         JsContext* ctx,

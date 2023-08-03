@@ -115,19 +115,18 @@ internal class StaticTypeProxy : ClrProxyBase, IDisposable
             data = default;
             return false;
         }
-        //MethodInfo
         if (member is MethodInfo method)
-        { //todo fix this
+        {
+            var helper = new MethodHelper(method);
             data = new JsPropertyDescriptor
             {
                 Flags = JsPropertyFlags.HasValue,
                 Value = ctxInstance
                     .NewJsFunctionObject(
-                        (_, thisObj, argv) =>
+                        (_, _, argv) =>
                         {
-                            Log.Logger.Trace("get");
-                            //todo impl
-                            return JsValueCreateHelper.NewInt32(233);
+                            Log.Logger.Trace("call");
+                            return helper.Call(ctxInstance, argv).Steal();
                         }
                     )
                     .Steal(),
@@ -137,31 +136,31 @@ internal class StaticTypeProxy : ClrProxyBase, IDisposable
         }
         if (member is PropertyInfo property)
         {
-            data = new JsPropertyDescriptor { Flags = JsPropertyFlags.Normal };
+            data = new JsPropertyDescriptor { Flags = JsPropertyFlags.GetSet };
             if (property.GetMethod is { } getMethod)
             {
+                var helper = new MethodHelper(getMethod);
                 data.Flags |= JsPropertyFlags.HasGet;
                 data.Getter = ctxInstance
                     .NewJsFunctionObject(
-                        (_, thisObj, argv) =>
+                        (_, _, argv) =>
                         {
                             Log.Logger.Trace("get");
-                            //todo impl
-                            return JsValueCreateHelper.Undefined;
+                            return helper.Call(ctxInstance, argv).Steal();
                         }
                     )
                     .Steal();
             }
             if (property.SetMethod is { } setMethod)
             {
+                var helper = new MethodHelper(setMethod);
                 data.Flags |= JsPropertyFlags.HasSet;
                 data.Setter = ctxInstance
                     .NewJsFunctionObject(
-                        (_, thisObj, argv) =>
+                        (_, _, argv) =>
                         {
                             Log.Logger.Trace("set");
-                            //todo impl
-                            return JsValueCreateHelper.Undefined;
+                            return helper.Call(ctxInstance, argv).Steal();
                         }
                     )
                     .Steal();
