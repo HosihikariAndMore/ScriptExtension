@@ -167,6 +167,7 @@ public abstract class ClrProxyBase : ClrFunctionProxyBase
                     NativeMemory.Copy(p, *propertyTable, size);
                 }
             }
+            *propertyLength = (uint)names.Length;
             return 0;
         }
         catch (Exception ex)
