@@ -1,5 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using Hosihikari.VanillaScript.QuickJS.Types;
+using Hosihikari.VanillaScript.QuickJS.Wrapper;
 
 namespace Hosihikari.VanillaScript.QuickJS.Extensions;
 
@@ -137,6 +138,47 @@ public static class JsValueTypes
         return @this.Tag is JsTag.Object;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe bool IsArray(this JsValue @this, JsContextWrapper ctx) =>
+        IsArray(@this, ctx.Context);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe bool IsArray(this JsValue @this, JsContext* ctx)
+    {
+        if (@this.Tag is not JsTag.Object)
+            return false;
+        return Native.JS_IsArray(ctx, @this);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe int GetArrayLength(this JsValue @this, JsContext* ctx)
+    {
+        if (!IsArray(@this, ctx))
+            throw new InvalidOperationException("@this is not array");
+        using var value = Native.JS_GetPropertyStr(ctx, @this, "length");
+        return value.Value.ToInt32();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe int GetArrayLength(this JsValue @this, JsContextWrapper ctx) =>
+        GetArrayLength(@this, ctx.Context);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe AutoDropJsValue[] GetArrayValues(
+        this JsValue @this,
+        JsContextWrapper ctx
+    ) => GetArrayValues(@this, ctx.Context);
+
+    public static unsafe AutoDropJsValue[] GetArrayValues(this JsValue @this, JsContext* ctx)
+    {
+        var len = GetArrayLength(@this, ctx);
+        var items = new AutoDropJsValue[len];
+        for (var i = 0; i < len; i++)
+        {
+            items[i] = Native.JS_GetPropertyUint32(ctx, @this, (uint)i);
+        }
+        return items;
+    }
     //ref #L9753
     //BOOL JS_IsError(JSContext* ctx, JSValueConst val)
     //{

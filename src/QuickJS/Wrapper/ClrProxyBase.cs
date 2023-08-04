@@ -1,52 +1,47 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
+using Hosihikari.VanillaScript.QuickJS.Extensions.Check;
+using Hosihikari.VanillaScript.QuickJS.Helper;
 using Hosihikari.VanillaScript.QuickJS.Types;
 
 namespace Hosihikari.VanillaScript.QuickJS.Wrapper;
 
-public abstract class ClrProxyBase : ClrFunctionProxyBase
+public abstract class ClrProxyBase
 {
-    /// <summary>
-    /// default: false
-    /// return true to disable all exotic methods
-    /// if true, <see cref="GetOwnProperty"/>, <see cref="GetOwnPropertyNames"/>, <see cref="DefineOwnProperty"/>, <see cref="DeleteProperty"/> will not be called
-    /// </summary>
-    protected virtual bool NoExotic => false;
+#if DEBUG
+    private static int activeCount = 0;
+#endif
 
-    protected virtual unsafe void GcMark(
-        JsRuntime* rt,
-        JsValue value,
-        delegate* unmanaged<JsRuntime*, JsGCObjectHeader*, void> mark
-    ) { }
+    public static T GetFromIntPtr<T>(nint ptr)
+    {
+        var handle = GCHandle.FromIntPtr(ptr);
+        return (T)handle.Target!;
+    }
 
-    protected override JsValue Invoke(
+    public static nint PinAndGetIntPtr<T>(T item)
+        where T : ClrProxyBase
+    {
+        var handle = GCHandle.Alloc(item);
+#if DEBUG
+        activeCount++;
+#endif
+        return GCHandle.ToIntPtr(handle);
+    }
+
+    protected abstract JsValue Invoke(
         JsContextWrapper ctxInstance,
         JsValue contextThis,
         ReadOnlySpan<JsValue> argv,
         JsCallFlag flags
-    )
-    {
-        return ctxInstance.ThrowJsError(
-            NoExotic
-                ? new NotImplementedException(nameof(Invoke))
-                : new InvalidOperationException(nameof(Invoke))
-        );
-    }
+    );
 
-    protected virtual bool GetOwnProperty(
+    protected abstract bool GetOwnProperty(
         JsContextWrapper ctxInstance,
         out JsPropertyDescriptor data,
         JsAtom propName
-    )
-    {
-        data = default;
-        return false;
-    }
+    );
 
-    protected virtual JsPropertyEnum[] GetOwnPropertyNames(JsContextWrapper ctxInstance)
-    {
-        return Array.Empty<JsPropertyEnum>();
-    }
+    protected abstract JsPropertyEnum[] GetOwnPropertyNames(JsContextWrapper ctxInstance);
 
     /// <summary>
     /// if found return true
@@ -56,12 +51,13 @@ public abstract class ClrProxyBase : ClrFunctionProxyBase
     /// <param name="this"></param>
     /// <param name="prop"></param>
     /// <returns> if found return true</returns>
-    protected virtual bool DeleteProperty(JsContextWrapper ctxInstance, JsValue @this, JsAtom prop)
-    {
-        return false;
-    }
+    protected abstract bool DeleteProperty(
+        JsContextWrapper ctxInstance,
+        JsValue @this,
+        JsAtom prop
+    );
 
-    protected virtual bool DefineOwnProperty(
+    protected abstract bool DefineOwnProperty(
         JsContextWrapper ctxInstance,
         JsValue @this,
         JsAtom prop,
@@ -69,11 +65,13 @@ public abstract class ClrProxyBase : ClrFunctionProxyBase
         JsValue getter,
         JsValue setter,
         JsPropertyFlags flags
-    )
-    {
-        ctxInstance.ThrowJsError(new NotImplementedException(nameof(Invoke)));
-        return false;
-    }
+    );
+
+    protected unsafe void GcMark(
+        JsRuntime* rt,
+        JsValue value,
+        delegate* unmanaged<JsRuntime*, JsGCObjectHeader*, void> mark
+    ) { }
 
     #region StaticFunction
     #region Exotic
@@ -229,7 +227,6 @@ public abstract class ClrProxyBase : ClrFunctionProxyBase
     }
 
     #endregion
-
     [UnmanagedCallersOnly]
     internal static unsafe void JsClassGcMark(
         JsRuntime* rt,
@@ -244,23 +241,82 @@ public abstract class ClrProxyBase : ClrFunctionProxyBase
         }
     }
 
-    #region Helper
-    private static bool TryGetInstance(JsValue value, [NotNullWhen(true)] out ClrProxyBase? obj)
+    [UnmanagedCallersOnly]
+    internal static unsafe void JsClassFinalizer(JsRuntime* rt, JsValue value)
     {
         var opaque = Native.JS_GetOpaqueWithoutClass(value);
         if (opaque != IntPtr.Zero)
         {
-            if (GCHandle.FromIntPtr(opaque).Target is ClrProxyBase instance)
+            var handle = GCHandle.FromIntPtr(opaque);
+            try
             {
-                obj = instance;
-                return true;
+                (handle.Target as IDisposable)?.Dispose();
+                handle.Free();
+            }
+            catch (NullReferenceException e)
+            {
+                Log.Logger.Warning("JsClassFinalizer " + e);
+            }
+            Log.Logger.Trace("JsClassFinalizer " + opaque + " Current Active: " + --activeCount);
+        }
+        else
+        {
+            Log.Logger.Error("JsClassFinalizer IntPtr.Zero " + value.Tag);
+        }
+    }
+
+    [UnmanagedCallersOnly]
+    internal static unsafe JsValue JsClassCall(
+        JsContext* ctx,
+        JsValue @this,
+        JsValue contextThis,
+        int argc,
+        JsValue* argv,
+        JsCallFlag flags
+    )
+    {
+        Log.Logger.Trace($"JsClassCall {argc} {flags}");
+        try
+        {
+            if (JsGetInstanceReturnTrueIfThrow(ctx, out var ctxInstance, @this, out var obj))
+                return JsValueCreateHelper.Exception;
+            return obj.Invoke(
+                ctxInstance,
+                contextThis,
+                new ReadOnlySpan<JsValue>(argv, argc),
+                flags
+            );
+        }
+        catch (Exception ex)
+        {
+            return Native.JS_ThrowInternalError(ctx, ex);
+        }
+    }
+
+    #region Helper
+    public static bool TryGetInstance(JsValue value, [NotNullWhen(true)] out ClrProxyBase? obj)
+    {
+        var opaque = Native.JS_GetOpaqueWithoutClass(value);
+        if (opaque != IntPtr.Zero)
+        {
+            try
+            {
+                if (GCHandle.FromIntPtr(opaque).Target is ClrProxyBase instance)
+                {
+                    obj = instance;
+                    return true;
+                }
+            }
+            catch (NullReferenceException e)
+            {
+                Log.Logger.Warning("TryGetInstance " + e);
             }
         }
         obj = null;
         return false;
     }
 
-    private static unsafe bool JsGetInstanceReturnTrueIfThrow(
+    private protected static unsafe bool JsGetInstanceReturnTrueIfThrow(
         JsContext* ctx,
         [NotNullWhen(false)] out JsContextWrapper? ctxInstance,
         JsValue @this,
@@ -282,6 +338,39 @@ public abstract class ClrProxyBase : ClrFunctionProxyBase
         return false;
     }
     #endregion
-
     #endregion
+
+
+    [UnmanagedCallersOnly]
+    internal static unsafe JsValue ProtoTypeToString(
+        JsContext* ctx,
+        JsValue thisObj,
+        int argc,
+        JsValue* argvPtr
+    )
+    {
+        try
+        {
+            var argv = new ReadOnlySpan<JsValue>(argvPtr, argc);
+            if (!TryGetInstance(thisObj, out var data))
+            {
+                return Native.JS_ThrowInternalError(ctx, "could not find thisObj calling toString");
+            }
+            string? format = null;
+            if (argv.InsureArgumentCount(0, 1) == 1)
+            {
+                argv[0].InsureTypeString(ctx, out format);
+            }
+            var str = data is IFormattable fmtData
+                ? fmtData.ToString(format, null)
+                : data.ToString();
+            if (str is null)
+                return JsValueCreateHelper.Null;
+            return JsValueCreateHelper.NewString(ctx, str).Steal();
+        }
+        catch (Exception ex)
+        {
+            return Native.JS_ThrowInternalError(ctx, ex);
+        }
+    }
 }

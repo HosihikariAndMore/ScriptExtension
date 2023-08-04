@@ -3,7 +3,6 @@ using System.Text;
 using Hosihikari.Logging;
 using Hosihikari.VanillaScript.Assets;
 using Hosihikari.VanillaScript.QuickJS;
-using Hosihikari.VanillaScript.QuickJS.Exceptions;
 using Hosihikari.VanillaScript.QuickJS.Extensions;
 using Hosihikari.VanillaScript.QuickJS.Helper;
 using Hosihikari.VanillaScript.QuickJS.Types;

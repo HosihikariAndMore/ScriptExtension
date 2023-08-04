@@ -23,14 +23,18 @@ public class SafeJsValue
 
     public SafeJsValue(JsValue value, nint ctx)
     {
-        _value = value;
-        _value.UnsafeAddRefCount();
         if (JsContextWrapper.TryGet(ctx, out var tCtx))
         {
             _ctx = tCtx;
         }
         else
             throw new ArgumentException("context not found");
+        _value = value;
+        if (value.HasRefCount())
+        {
+            value.UnsafeAddRefCount();
+            _ctx.FreeContextCallback += FreeThis;
+        }
     }
 
     public SafeJsValue(AutoDropJsValue value)
@@ -38,7 +42,8 @@ public class SafeJsValue
         //steal the value to prevent free, then the value will be memory safe in managed environment
         _value = value.Steal();
         _ctx = value.Context;
-        _ctx.FreeContextCallback += FreeThis;
+        if (value.Value.HasRefCount())
+            _ctx.FreeContextCallback += FreeThis;
     }
 
     public ref JsValue Instance => ref _value;

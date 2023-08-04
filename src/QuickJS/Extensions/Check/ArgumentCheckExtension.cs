@@ -56,6 +56,17 @@ public static class ArgumentCheckExtension
         );
     }
 
+    public static int InsureArgumentCountAtLeast(this ReadOnlySpan<JsValue> @this, int count)
+    {
+        if (@this.Length >= count)
+        {
+            return @this.Length;
+        }
+        throw new ArgumentException(
+            $"not enough arguments, expected at least {count}, got {@this.Length}"
+        );
+    }
+
     /// <summary>
     /// check the JSValue is string, throw exception if not
     /// </summary>

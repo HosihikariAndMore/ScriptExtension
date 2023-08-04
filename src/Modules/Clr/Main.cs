@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+﻿using System.ComponentModel;
 using Hosihikari.VanillaScript.QuickJS;
 using Hosihikari.VanillaScript.QuickJS.Extensions;
 using Hosihikari.VanillaScript.QuickJS.Extensions.Check;
@@ -20,17 +20,116 @@ internal class Main
 
 internal class ClrModule
 {
+    /// <summary>
+    /// get type from JsValue, the JsValue might be ClrTypeProxy with specific typ or string indicating type name
+    /// </summary>
+    /// <param name="ctx"></param>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidEnumArgumentException"></exception>
+    private static Type GetBoxedClrTypeFromJsValue(JsContextWrapper ctx, JsValue value)
+    {
+        if (
+            ClrProxyBase.TryGetInstance(value, out var item)
+            && item is ClrTypeProxy { Type: var targetType }
+        )
+        { //direct provided  type
+            return targetType;
+        } //provide with string name of type
+        return value.InsureTypeString(ctx) switch
+        {
+            "int" => typeof(int),
+            "string" => typeof(string),
+            "bool" => typeof(bool),
+            "double" => typeof(double),
+            "float" => typeof(float),
+            "long" => typeof(long),
+            "short" => typeof(short),
+            "byte" => typeof(byte),
+            "char" => typeof(char),
+            "uint" => typeof(uint),
+            "ulong" => typeof(ulong),
+            "ushort" => typeof(ushort),
+            "sbyte" => typeof(sbyte),
+            "decimal" => typeof(decimal),
+            "object" => typeof(object),
+            _ => throw new InvalidEnumArgumentException("toClrInstance argv[1]")
+        };
+    }
+
     public static void Setup(JsContextWrapper ctx, JsModuleDefWrapper module)
     {
         module.AddExportFunction(
-            "clrUsingStatic",
+            "makeGenericType",
+            2,
+            (_, _, argv) =>
+            {
+                argv.InsureArgumentCountAtLeast(2);
+                var baseType = GetBoxedClrTypeFromJsValue(ctx, argv[0]);
+                Type[] types;
+                if (argv[1].IsArray(ctx))
+                {
+                    var values = argv[1].GetArrayValues(ctx);
+                    try
+                    {
+                        types = values
+                            .Select(x => GetBoxedClrTypeFromJsValue(ctx, x.Value))
+                            .ToArray();
+                    }
+                    finally
+                    { //free immediately
+                        foreach (var value in values)
+                            value.Dispose();
+                    }
+                }
+                else
+                {
+                    var typesJsValue = argv[1..];
+                    types = new Type[typesJsValue.Length];
+                    for (var i = 0; i < typesJsValue.Length; i++)
+                        types[i] = GetBoxedClrTypeFromJsValue(ctx, typesJsValue[i]);
+                }
+                return ctx.NewClrTypeObject(new ClrTypeProxy(baseType.MakeGenericType(types)))
+                    .Steal();
+            }
+        );
+        module.AddExportFunction(
+            "toClrInstance",
+            2,
+            (_, _, argv) =>
+            {
+                switch (argv.InsureArgumentCount(1, 2))
+                {
+                    case 1:
+                    {
+                        var obj =
+                            argv[0].ToClrObject(ctx)
+                            ?? throw new NullReferenceException("toClrInstance argv[0]");
+                        return ctx.NewClrInstanceObject(new ClrInstanceProxy(obj, obj.GetType()))
+                            .Steal();
+                    }
+                    case 2:
+                    {
+                        var obj =
+                            argv[0].ToClrObject(ctx, GetBoxedClrTypeFromJsValue(ctx, argv[1]))
+                            ?? throw new NullReferenceException("toClrInstance argv[0]");
+                        return ctx.NewClrInstanceObject(new ClrInstanceProxy(obj, obj.GetType()))
+                            .Steal();
+                    }
+                }
+
+                return JsValueCreateHelper.Undefined;
+            }
+        );
+        module.AddExportFunction(
+            "clrImport",
             2,
             (_, _, argv) =>
             {
                 argv.InsureArgumentCount(2);
                 argv[0].InsureTypeString(ctx, out var assemblyName);
                 argv[1].InsureTypeString(ctx, out var type);
-                return ctx.NewObject(new StaticTypeProxy(assemblyName, type)).Steal();
+                return ctx.NewClrTypeObject(new ClrTypeProxy(assemblyName, type)).Steal();
             }
         );
         module.AddExportFunction(
@@ -65,130 +164,6 @@ internal class ClrModule
                     )
                     .Steal();
             }
-        );
-    }
-}
-
-internal class StaticTypeProxy : ClrProxyBase, IDisposable
-{
-    public Type? Type { get; }
-    private readonly Lazy<StaticFunctionFinder> _staticFunctionFinder;
-    public StaticFunctionFinder FunctionFinder => _staticFunctionFinder.Value;
-
-    public StaticTypeProxy(string assemblyName, string type)
-    {
-        Type = new TypeFinder(assemblyName).FindType(type);
-        _staticFunctionFinder = new Lazy<StaticFunctionFinder>(
-            () => new StaticFunctionFinder(Type)
-        );
-    }
-
-    public void Dispose()
-    {
-        OnDispose?.Invoke();
-    }
-
-    public event Action? OnDispose;
-
-    protected override JsPropertyEnum[] GetOwnPropertyNames(JsContextWrapper ctxInstance) =>
-        FunctionFinder
-            .EnumStaticMembers()
-            .Select(
-                member =>
-                    new JsPropertyEnum
-                    {
-                        Atom = ctxInstance.NewAtom(member.Name).Steal(),
-                        IsEnumerable = false //todo what is this?
-                    }
-            )
-            .ToArray();
-
-    protected override bool GetOwnProperty(
-        JsContextWrapper ctxInstance,
-        out JsPropertyDescriptor data,
-        JsAtom propName
-    )
-    {
-        var name = propName.ToString(ctxInstance);
-        if (!FunctionFinder.TryFindMember(name, out var member))
-        {
-            data = default;
-            return false;
-        }
-        if (member is MethodInfo method)
-        {
-            var helper = new MethodHelper(method);
-            data = new JsPropertyDescriptor
-            {
-                Flags = JsPropertyFlags.HasValue,
-                Value = ctxInstance
-                    .NewJsFunctionObject(
-                        (_, _, argv) =>
-                        {
-                            Log.Logger.Trace("call");
-                            return helper.Call(ctxInstance, argv).Steal();
-                        }
-                    )
-                    .Steal(),
-            };
-            Log.Logger.Trace("method");
-            return true;
-        }
-        if (member is PropertyInfo property)
-        {
-            data = new JsPropertyDescriptor { Flags = JsPropertyFlags.GetSet };
-            if (property.GetMethod is { } getMethod)
-            {
-                var helper = new MethodHelper(getMethod);
-                data.Flags |= JsPropertyFlags.HasGet;
-                data.Getter = ctxInstance
-                    .NewJsFunctionObject(
-                        (_, _, argv) =>
-                        {
-                            Log.Logger.Trace("get");
-                            return helper.Call(ctxInstance, argv).Steal();
-                        }
-                    )
-                    .Steal();
-            }
-            if (property.SetMethod is { } setMethod)
-            {
-                var helper = new MethodHelper(setMethod);
-                data.Flags |= JsPropertyFlags.HasSet;
-                data.Setter = ctxInstance
-                    .NewJsFunctionObject(
-                        (_, _, argv) =>
-                        {
-                            Log.Logger.Trace("set");
-                            return helper.Call(ctxInstance, argv).Steal();
-                        }
-                    )
-                    .Steal();
-            }
-            return true;
-        }
-        if (member is FieldInfo field)
-        {
-            var value = field.GetValue(null);
-            data = new JsPropertyDescriptor
-            {
-                Flags = JsPropertyFlags.HasValue,
-                Value = JsValueCreateHelper.New(value, ctxInstance).Steal()
-            };
-            return true;
-        }
-        throw new NotImplementedException($"member type {member.Name}:{member.GetType()} not impl");
-    }
-
-    protected override JsValue Invoke(
-        JsContextWrapper ctxInstance,
-        JsValue thisVal,
-        ReadOnlySpan<JsValue> argv,
-        JsCallFlag flags
-    )
-    {
-        return ctxInstance.ThrowJsError(
-            new InvalidOperationException("call static type not allowed")
         );
     }
 }

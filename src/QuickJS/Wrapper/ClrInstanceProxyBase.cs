@@ -2,7 +2,7 @@
 
 namespace Hosihikari.VanillaScript.QuickJS.Wrapper;
 
-public abstract class ClrFunctionProxyBase : ClrProxyBase
+public abstract class ClrInstanceProxyBase : ClrProxyBase
 {
     protected override JsValue Invoke(
         JsContextWrapper ctxInstance,
@@ -12,6 +12,26 @@ public abstract class ClrFunctionProxyBase : ClrProxyBase
     )
     {
         return ctxInstance.ThrowJsError(new NotImplementedException(nameof(Invoke)));
+    }
+
+    protected override bool GetOwnProperty(
+        JsContextWrapper ctxInstance,
+        out JsPropertyDescriptor data,
+        JsAtom propName
+    )
+    {
+        data = default;
+        return false;
+    }
+
+    protected override JsPropertyEnum[] GetOwnPropertyNames(JsContextWrapper ctxInstance)
+    {
+        return Array.Empty<JsPropertyEnum>();
+    }
+
+    protected override bool DeleteProperty(JsContextWrapper ctxInstance, JsValue @this, JsAtom prop)
+    {
+        return false;
     }
 
     protected override bool DefineOwnProperty(
@@ -24,25 +44,7 @@ public abstract class ClrFunctionProxyBase : ClrProxyBase
         JsPropertyFlags flags
     )
     {
-        throw new InvalidOperationException(nameof(DefineOwnProperty));
-    }
-
-    protected override JsPropertyEnum[] GetOwnPropertyNames(JsContextWrapper ctxInstance)
-    {
-        throw new InvalidOperationException(nameof(GetOwnPropertyNames));
-    }
-
-    protected override bool DeleteProperty(JsContextWrapper ctxInstance, JsValue @this, JsAtom prop)
-    {
-        throw new InvalidOperationException(nameof(DeleteProperty));
-    }
-
-    protected override bool GetOwnProperty(
-        JsContextWrapper ctxInstance,
-        out JsPropertyDescriptor data,
-        JsAtom propName
-    )
-    {
-        throw new InvalidOperationException(nameof(GetOwnProperty));
+        ctxInstance.ThrowJsError(new NotImplementedException(nameof(DefineOwnProperty)));
+        return false;
     }
 }

@@ -1,7 +1,7 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Hosihikari.VanillaScript.Modules.Clr;
 using Hosihikari.VanillaScript.QuickJS.Exceptions;
 using Hosihikari.VanillaScript.QuickJS.Types;
 using Hosihikari.VanillaScript.QuickJS.Wrapper;
@@ -26,7 +26,7 @@ public static class JsValueExtension
 
     //ref #L252
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool HasRefCount(this JsValue @this)
+    public static bool HasRefCount(this JsValue @this)
     {
         unchecked
         {
@@ -135,6 +135,20 @@ public static class JsValueExtension
     public static unsafe string ToString(this JsValue @this, JsContext* ctx)
     {
         return Native.JS_ToCString(ctx, @this);
+    }
+
+    public static unsafe string ToString(this JsValue @this, JsContextWrapper ctx) =>
+        ToString(@this, ctx.Context);
+
+    public static unsafe bool SetProperty(
+        this JsValue @this,
+        JsContext* ctx,
+        JsValue propertyName,
+        JsValue value,
+        JsPropertyFlags flags = JsPropertyFlags.CWE
+    )
+    {
+        return Native.JS_SetPropertyValue(ctx, @this, propertyName, value, flags);
     }
 
     public static unsafe bool DefineProperty(
@@ -338,7 +352,10 @@ public static class JsValueExtension
         throw new InvalidCastException($"can not convert {value.GetType()} to {type}");
     }
 
-    //JS_ToFloat64
+    //todo JS_ToFloat64?
+    public static unsafe object? ToClrObject(this JsValue @this, JsContextWrapper ctx) =>
+        ToClrObject(@this, ctx.Context);
+
     public static unsafe object? ToClrObject(this JsValue @this, JsContext* ctx)
     {
         switch (@this.Tag)
@@ -364,6 +381,20 @@ public static class JsValueExtension
             //case JsTag.Object when Native.JS_IsArray(ctx, @this):
             //    throw new NotImplementedException("js array to clr not impl");
             case JsTag.Object:
+                if (
+                    ClrProxyBase.TryGetInstance(@this, out var item)
+                    && item is ClrInstanceProxy { Instance: var instance }
+                )
+                {
+                    return instance;
+                }
+                if (
+                    ClrProxyBase.TryGetInstance(@this, out item)
+                    && item is ClrTypeProxy { Type: var type }
+                )
+                {
+                    return type;
+                }
                 var json = @this.ToJson(ctx);
                 return JsonNode.Parse(json);
             default:

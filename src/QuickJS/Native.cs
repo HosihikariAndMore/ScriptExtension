@@ -179,6 +179,23 @@ else
     private static readonly Lazy<nint> _ptrJsIsFunction = GetPointerLazy("JS_IsFunction");
     #endregion
 
+    #region JS_IsArray
+
+    public static bool JS_IsArray(JsContext* ctx, JsValue @this)
+    {
+        var result = ((delegate* unmanaged<JsContext*, JsValue, int>)_ptrJsIsArray.Value)(
+            ctx,
+            @this
+        );
+        if (result == -1)
+            ThrowPendingException(ctx);
+        return result != 0;
+    }
+
+    private static readonly Lazy<nint> _ptrJsIsArray = GetPointerLazy("JS_IsArray");
+
+    #endregion
+
     #region JS_IsCFunction
 
     public static bool JS_IsCFunction(JsContext* ctx, JsValue @this, void* funcPtr, int magic)
@@ -858,6 +875,53 @@ static JSValue JS_CallFree(JSContext *ctx, JSValue func_obj, JSValueConst this_o
         "JS_ArraySpeciesCreate"
     );
 
+    #endregion
+
+    #region JS_GetPropertyUint32
+
+    public static AutoDropJsValue JS_GetPropertyUint32(JsContext* ctx, JsValue thisObj, uint idx)
+    {
+        var func = (delegate* unmanaged<JsContext*, JsValue, uint, JsValue>)
+            _ptrJsGetPropertyUint32.Value;
+        var result = func(ctx, thisObj, idx);
+        if (result.IsException())
+            ThrowPendingException(ctx);
+        return new AutoDropJsValue(result, ctx);
+    }
+
+    private static readonly Lazy<nint> _ptrJsGetPropertyUint32 = GetPointerLazy(
+        "JS_GetPropertyUint32"
+    );
+
+    #endregion
+
+    #region JS_SetPropertyValue
+    // int JS_SetPropertyValue(JSContext* ctx, JSValueConst this_obj,JSValue prop, JSValue val, int flags)
+    public static bool JS_SetPropertyValue(
+        JsContext* ctx,
+        JsValue thisObj,
+        JsValue prop,
+        JsValue val,
+        JsPropertyFlags flags
+    )
+    {
+        var func = (delegate* unmanaged<
+            JsContext*,
+            JsValue,
+            JsValue,
+            JsValue,
+            JsPropertyFlags,
+            int>)
+            _ptrJsSetPropertyValue.Value;
+        var result = func(ctx, thisObj, prop, val, flags);
+        if (result == -1)
+            ThrowPendingException(ctx);
+        return result == 1;
+    }
+
+    private static readonly Lazy<nint> _ptrJsSetPropertyValue = GetPointerLazy(
+        "JS_SetPropertyValue"
+    );
     #endregion
     #region JS_SetPropertyUint32
     /*int JS_SetPropertyUint32(JSContext *ctx, JSValueConst this_obj,

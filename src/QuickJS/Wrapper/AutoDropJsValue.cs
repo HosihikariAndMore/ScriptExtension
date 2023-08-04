@@ -29,7 +29,7 @@ public class AutoDropJsValue : IDisposable
     {
         _value = value;
         _context = context;
-        if (JsContextWrapper.TryGet((nint)context, out var tCtx))
+        if (value.HasRefCount() && JsContextWrapper.TryGet((nint)context, out var tCtx))
         {
             tCtx.FreeContextCallback += FreeThis;
         }

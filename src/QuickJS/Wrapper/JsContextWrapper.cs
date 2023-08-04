@@ -1,7 +1,8 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Hosihikari.VanillaScript.Loader;
+using Hosihikari.VanillaScript.QuickJS.Extensions;
+using Hosihikari.VanillaScript.QuickJS.Extensions.Check;
 using Hosihikari.VanillaScript.QuickJS.Helper;
 using Hosihikari.VanillaScript.QuickJS.Types;
 using static Hosihikari.VanillaScript.QuickJS.Types.JsClassDef;
@@ -218,14 +219,14 @@ public class JsContextWrapper
     );
 
     /// <summary>
-    /// memory safe
+    /// memory safe;
     /// will auto free when related JsValue free
     /// </summary>
     /// <param name="func"></param>
     /// <returns></returns>
     public AutoDropJsValue NewJsFunctionObject(JsNativeFunctionDelegate func)
     {
-        return NewFunctionObject(new ClrFunctionProxyInstance(func));
+        return NewClrFunctionObject(new ClrFunctionProxyInstance(func));
     }
 
     /// <summary>
@@ -295,86 +296,113 @@ public class JsContextWrapper
         return Native.JS_NewCFunction2(Context, func, name, argumentLength, protoType, 0);
     }
 
-    public AutoDropJsValue NewObject<T>(T data)
-        where T : ClrProxyBase
+    //public AutoDropJsValue NewObject<T>(T data)
+    //    where T : ClrProxyBase
+    //{
+    //    unsafe
+    //    {
+    //        if (!_classIdCache.TryGetValue(ClrObjectProxyName, out var classId))
+    //            classId = RegisterClrObjectClassInternal(); //register class if not exists
+    //        var result = JsValueCreateHelper.NewObject(Context, classId);
+    //        var opaque = GCHandle.ToIntPtr(GCHandle.Alloc(data));
+    //        Native.JS_SetOpaque(result.Value, opaque);
+    //        return result;
+    //    }
+    //}
+    private JsClassId GetOrCreateType(string name, bool hasCall, bool hasExotic)
     {
+        if (_classIdCache.TryGetValue((name, hasCall, hasExotic), out var classId))
+            return classId;
+        //register class if not exists
         unsafe
         {
-            if (!_typeClassIdCache.TryGetValue(typeof(ClrProxyBase), out var classId))
-                classId = RegisterClrObjectClassInternal(); //register class if not exists
-            var result = JsValueCreateHelper.NewObject(Context, classId);
-            var opaque = GCHandle.ToIntPtr(GCHandle.Alloc(data));
-            Native.JS_SetOpaque(result.Value, opaque);
-            return result;
+            var def = new JsClassDef
+            {
+                Finalizer = &ClrProxyBase.JsClassFinalizer,
+                GcMark = &ClrProxyBase.JsClassGcMark,
+            };
+            if (hasCall)
+                def.Call = &ClrProxyBase.JsClassCall;
+            if (hasExotic)
+                def.Exotic = (JsClassExoticMethods*)
+                    ClrProxyBase.JsClassExoticMethods.Value.ToPointer();
+            classId = RegisterClass(name, def);
+            var proto = NewObject().Steal();
+            Native.JS_DefinePropertyValue(
+                Context,
+                proto,
+                JsAtom.BuildIn.ToStringFunc,
+                NewStaticJsFunction("toString", 1, &ClrProxyBase.ProtoTypeToString).Steal(),
+                JsPropertyFlags.Writable | JsPropertyFlags.Configurable
+            );
+            Native.JS_SetClassProto(Context, classId, proto);
         }
+        return classId;
     }
 
-    public AutoDropJsValue NewFunctionObject<T>(T data)
+    #region InstanceProxy
+
+    public AutoDropJsValue NewClrInstanceObject<T>(T data)
+        where T : ClrInstanceProxyBase
+    {
+        var classId = GetOrCreateType("ClrInstanceProxy", false, true);
+        return NewObject(classId, data);
+    }
+    #endregion
+    #region TypeProxy
+
+    public AutoDropJsValue NewClrTypeObject<T>(T data)
+        where T : ClrTypeProxyBase
+    {
+        JsClassId classId;
+        if (data.HasConstructor)
+        {
+            classId = GetOrCreateType("ClrTypeProxy", true, true);
+            var obj = NewObject(classId, data);
+            unsafe
+            {
+                Native.JS_SetConstructorBit(Context, obj.Value, true);
+            }
+            return obj;
+        }
+
+        classId = GetOrCreateType("ClrStaticTypeProxy", false, true);
+        return NewObject(classId, data);
+    }
+    #endregion
+    #region FunctionProxy
+    public AutoDropJsValue NewClrFunctionObject<T>(T data)
         where T : ClrFunctionProxyBase
     {
-        unsafe
-        {
-            if (!_typeClassIdCache.TryGetValue(typeof(ClrFunctionProxyBase), out var classId))
-                classId = RegisterClrFunctionClassInternal(); //register class if not exists
-            var result = JsValueCreateHelper.NewObject(Context, classId);
-            var opaque = GCHandle.ToIntPtr(GCHandle.Alloc(data));
-            Native.JS_SetOpaque(result.Value, opaque);
-            return result;
-        }
+        var classId = GetOrCreateType("ClrFunctionProxy", true, false);
+        return NewObject(classId, data);
     }
+    #endregion
 
-    private readonly Dictionary<Type, JsClassId> _typeClassIdCache = new();
+    private readonly Dictionary<
+        (string name, bool hasCall, bool hasExotic),
+        JsClassId
+    > _classIdCache = new();
 
-    #region AutoRegister
-    private JsClassId RegisterClrObjectClassInternal()
-    {
-        unsafe
-        {
-            return RegisterClass<ClrProxyBase>(
-                "ClrObjectProxy",
-                new JsClassDef
-                {
-                    Call = &ClrFunctionProxyBase.JsClassCall,
-                    Finalizer = &ClrFunctionProxyBase.JsClassFinalizer,
-                    GcMark = &ClrProxyBase.JsClassGcMark,
-                    Exotic = (JsClassExoticMethods*)
-                        ClrProxyBase.JsClassExoticMethods.Value.ToPointer()
-                }
-            );
-        }
-    }
-
-    private JsClassId RegisterClrFunctionClassInternal()
-    {
-        unsafe
-        {
-            return RegisterClass<ClrFunctionProxyBase>(
-                "ClrFunctionProxy",
-                new JsClassDef
-                {
-                    Call = &ClrFunctionProxyBase.JsClassCall,
-                    Finalizer = &ClrFunctionProxyBase.JsClassFinalizer,
-                    GcMark = &ClrProxyBase.JsClassGcMark,
-                }
-            );
-        }
-    }
-
-    private JsClassId RegisterClass<T>(string name, JsClassDef classDef)
-        where T : ClrFunctionProxyBase
+    private JsClassId RegisterClass(string name, JsClassDef classDef)
     {
         Runtime.TryGetClassId(name, out var id); //get old id
         var item = Runtime.NewRegisterClass(name, classDef, id);
-        _typeClassIdCache[typeof(T)] = item;
+        unsafe
+        {
+            _classIdCache[(name, classDef.Call is not null, classDef.Exotic is not null)] = item;
+        }
         return item;
     }
-    #endregion
+
+    public AutoDropJsValue NewObject<T>(JsClassId classId, T data)
+        where T : ClrProxyBase => NewObject(classId, ClrProxyBase.PinAndGetIntPtr(data));
 
     public AutoDropJsValue NewObject(JsClassId classId, nint opaque)
     {
         unsafe
         {
-            var instance = Native.JS_NewObjectClass(Context, classId);
+            var instance = JsValueCreateHelper.NewObject(Context, classId);
             Native.JS_SetOpaque(instance.Value, opaque);
             return instance;
         }
@@ -399,12 +427,12 @@ public class JsContextWrapper
     public AutoDropJsValue NewArray<T>(IEnumerable<T> data)
         where T : unmanaged
     {
-        return NewArray(data.ToArray()); //todo : optimize use js iterator
+        return NewArray(data.ToArray()); //todo : optimize use js iterator for IEnumerable
     }
 
     public AutoDropJsValue NewArray(IEnumerable<string> data)
     {
-        return NewArray(data.ToArray()); //todo : optimize use js iterator
+        return NewArray(data.ToArray()); //todo : optimize use js iterator for IEnumerable
     }
 
     public AutoDropJsValue NewArray<T>(T[] data)
