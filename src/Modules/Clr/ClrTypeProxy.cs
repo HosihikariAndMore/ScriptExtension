@@ -32,6 +32,22 @@ internal class ClrTypeProxy : ClrTypeProxyBase, IDisposable
         _constructorFinder = new Lazy<TypeConstructorFinder>(() => new TypeConstructorFinder(Type));
     }
 
+    private static Type FindTypeInAllAssemblies(string type)
+    {
+        foreach (var assembly in TypeFinder.EnumAllAssemblies())
+        {
+            var typeFinder = new TypeFinder(assembly);
+            if (typeFinder.TryFindType(type, out var item))
+            {
+                return item;
+            }
+        }
+        throw new TypeLoadException($"type {type} not found");
+    }
+
+    public ClrTypeProxy(string type)
+        : this(FindTypeInAllAssemblies(type)) { }
+
     public ClrTypeProxy(string assemblyName, string type)
         : this(new TypeFinder(assemblyName).FindType(type)) { }
 

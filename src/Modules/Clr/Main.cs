@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel;
-using Hosihikari.VanillaScript.QuickJS;
+using System.Reflection;
 using Hosihikari.VanillaScript.QuickJS.Extensions;
 using Hosihikari.VanillaScript.QuickJS.Extensions.Check;
 using Hosihikari.VanillaScript.QuickJS.Helper;
@@ -126,14 +126,20 @@ internal class ClrModule
             2,
             (_, _, argv) =>
             {
-                argv.InsureArgumentCount(2);
-                argv[0].InsureTypeString(ctx, out var assemblyName);
-                argv[1].InsureTypeString(ctx, out var type);
-                return ctx.NewClrTypeObject(new ClrTypeProxy(assemblyName, type)).Steal();
+                if (argv.InsureArgumentCount(1, 2) == 2)
+                {
+                    argv[0].InsureTypeString(ctx, out var type);
+                    argv[1].InsureTypeString(ctx, out var assemblyName);
+                    return ctx.NewClrTypeObject(new ClrTypeProxy(assemblyName, type)).Steal();
+                }
+                {
+                    argv[0].InsureTypeString(ctx, out var type);
+                    return ctx.NewClrTypeObject(new ClrTypeProxy(type)).Steal();
+                }
             }
         );
         module.AddExportFunction(
-            "getAllLoadedAssemblyName",
+            "getAllLoadedAssembly",
             0,
             (_, _, argv) =>
             {
@@ -149,7 +155,7 @@ internal class ClrModule
             }
         );
         module.AddExportFunction(
-            "getAllTypesFromAssembly",
+            "getAllTypeFromAssembly",
             1,
             (_, _, argv) =>
             {

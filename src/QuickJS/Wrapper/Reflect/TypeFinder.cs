@@ -20,6 +20,11 @@ public class TypeFinder
                 ?.GetExportedTypes() ?? Enumerable.Empty<Type>();
     }
 
+    public TypeFinder(Assembly assembly)
+    {
+        _assembly = assembly;
+    }
+
     public TypeFinder(string assemblyName)
     {
         _assembly =
