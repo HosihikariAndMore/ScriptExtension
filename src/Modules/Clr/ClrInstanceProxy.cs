@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using Hosihikari.VanillaScript.QuickJS.Extensions;
 using Hosihikari.VanillaScript.QuickJS.Helper;
 using Hosihikari.VanillaScript.QuickJS.Types;
@@ -11,6 +12,7 @@ internal class ClrInstanceProxy : ClrInstanceProxyBase, IDisposable, IFormattabl
 {
     private readonly Lazy<InstanceMemberFinder> _staticFunctionFinder;
     public InstanceMemberFinder MemberFinder => _staticFunctionFinder.Value;
+    private MemberReflectCache _memberCache = new();
     public Type Type { get; }
     public object? Instance { get; }
 
@@ -62,6 +64,78 @@ internal class ClrInstanceProxy : ClrInstanceProxyBase, IDisposable, IFormattabl
         JsAtom propName
     )
     {
+        void InvokeAsProperty(
+            PropertyInfo prop,
+            out JsPropertyDescriptor data,
+            object[]? indexer = null
+        )
+        {
+            data = new JsPropertyDescriptor
+            {
+                Flags = JsPropertyFlags.GetSet | JsPropertyFlags.Enumerable
+            };
+            if (
+                !_memberCache.GetPropHelperCache(
+                    prop,
+                    out var getHelper,
+                    out var setHelper,
+                    indexer
+                )
+            )
+            {
+                if (indexer is not null)
+                {
+                    if (prop.GetMethod is { } getMethod)
+                        getHelper = new IndexerMethodHelper(getMethod, Instance, indexer);
+                    if (prop.SetMethod is { } setMethod)
+                        setHelper = new IndexerMethodHelper(setMethod, Instance, indexer);
+                }
+                else
+                {
+                    if (prop.GetMethod is { } getMethod)
+                        getHelper = new MethodHelper(getMethod, Instance);
+                    if (prop.SetMethod is { } setMethod)
+                        setHelper = new MethodHelper(setMethod, Instance);
+                }
+                _memberCache.AddPropHelperCache(prop, getHelper, setHelper, indexer);
+            }
+            if (getHelper is not null)
+            {
+                data.Flags |= JsPropertyFlags.HasGet;
+                data.Getter = ctxInstance
+                    .NewJsFunctionObject(
+                        (_, _, argv) =>
+                        {
+                            Log.Logger.Trace("get");
+                            return getHelper.Call(ctxInstance, argv).Steal();
+                        }
+                    )
+                    .Steal();
+            }
+            if (setHelper is not null)
+            {
+                data.Flags |= JsPropertyFlags.HasSet;
+                data.Setter = ctxInstance
+                    .NewJsFunctionObject(
+                        (_, _, argv) =>
+                        {
+                            Log.Logger.Trace("set");
+                            return setHelper.Call(ctxInstance, argv).Steal();
+                        }
+                    )
+                    .Steal();
+            }
+        }
+        //bool withIndex = propName.TryGetIndex(ctxInstance, out uint idx);
+        if (propName.TryGetIndex(ctxInstance, out var idx)) //todo support multi dimension indexer
+        {
+            Log.Logger.Trace("GetOwnProperty: [" + idx + "]");
+            if (MemberFinder.TryGetIndexer(out var indexer))
+            {
+                InvokeAsProperty(indexer, out data, new object[] { idx });
+                return true;
+            }
+        }
         var name = propName.ToString(ctxInstance);
         Log.Logger.Trace("GetOwnProperty:" + name);
         if (!MemberFinder.TryFindMember(name, out var member))
@@ -69,71 +143,48 @@ internal class ClrInstanceProxy : ClrInstanceProxyBase, IDisposable, IFormattabl
             data = default;
             return false;
         }
-        if (member is MethodInfo method)
+        switch (member)
         {
-            var helper = new MethodHelper(method, Instance);
-            data = new JsPropertyDescriptor
+            case PropertyInfo property:
+                InvokeAsProperty(property, out data);
+                return true;
+            case MethodInfo method:
             {
-                Flags = JsPropertyFlags.HasValue,
-                Value = ctxInstance
-                    .NewJsFunctionObject(
-                        (_, _, argv) =>
-                        {
-                            Log.Logger.Trace("call");
-                            return helper.Call(ctxInstance, argv).Steal();
-                        }
-                    )
-                    .Steal(),
-            };
-            Log.Logger.Trace("method");
-            return true;
-        }
-        if (member is PropertyInfo property)
-        {
-            data = new JsPropertyDescriptor
-            {
-                Flags = JsPropertyFlags.GetSet | JsPropertyFlags.Enumerable
-            };
-            if (property.GetMethod is { } getMethod)
-            {
-                var helper = new MethodHelper(getMethod, Instance);
-                data.Flags |= JsPropertyFlags.HasGet;
-                data.Getter = ctxInstance
-                    .NewJsFunctionObject(
-                        (_, _, argv) =>
-                        {
-                            Log.Logger.Trace("get");
-                            return helper.Call(ctxInstance, argv).Steal();
-                        }
-                    )
-                    .Steal();
+                if (!_memberCache.GetMethodHelperCache(method, out var helper))
+                {
+                    helper = new MethodHelper(method, Instance);
+                    _memberCache.AddMethodHelperCache(method, helper);
+                }
+                data = new JsPropertyDescriptor
+                {
+                    Flags = JsPropertyFlags.HasValue,
+                    Value = ctxInstance
+                        .NewJsFunctionObject(
+                            (_, _, argv) =>
+                            {
+                                Log.Logger.Trace("call");
+                                return helper.Call(ctxInstance, argv).Steal();
+                            }
+                        )
+                        .Steal(),
+                };
+                Log.Logger.Trace("method");
+                return true;
             }
-            if (property.SetMethod is { } setMethod)
+            case FieldInfo field:
             {
-                var helper = new MethodHelper(setMethod, Instance);
-                data.Flags |= JsPropertyFlags.HasSet;
-                data.Setter = ctxInstance
-                    .NewJsFunctionObject(
-                        (_, _, argv) =>
-                        {
-                            Log.Logger.Trace("set");
-                            return helper.Call(ctxInstance, argv).Steal();
-                        }
-                    )
-                    .Steal();
+                var value = field.GetValue(Instance);
+                data = new JsPropertyDescriptor
+                {
+                    Flags = JsPropertyFlags.HasValue | JsPropertyFlags.Enumerable,
+                    Value = JsValueCreateHelper.New(value, ctxInstance).Steal()
+                };
+                return true;
             }
-            return true;
+            default:
+                throw new NotImplementedException(
+                    $"member type {member.Name}:{member.GetType()} not impl"
+                );
         }
-        if (member is FieldInfo field)
-        {
-            var value = field.GetValue(Instance);
-            data = new JsPropertyDescriptor
-            {
-                Flags = JsPropertyFlags.HasValue | JsPropertyFlags.Enumerable,
-                Value = JsValueCreateHelper.New(value, ctxInstance).Steal()
-            };
-            return true;
-        }
-        throw new NotImplementedException($"member type {member.Name}:{member.GetType()} not impl");
     }
 }

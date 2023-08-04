@@ -6,7 +6,8 @@ namespace Hosihikari.VanillaScript.QuickJS.Wrapper.Reflect;
 public class InstanceMemberFinder
 {
     private readonly Type _type;
-    private readonly Dictionary<string, MemberInfo> _membersCache = new();
+    private Dictionary<string, MemberInfo>? _membersCache = null;
+    private Dictionary<int, PropertyInfo?>? _indexerCache = null;
 
     public InstanceMemberFinder(Type type)
     {
@@ -21,9 +22,26 @@ public class InstanceMemberFinder
         }
     }
 
+    public bool TryGetIndexer(
+        [NotNullWhen(true)] out PropertyInfo? result,
+        int indexParameterCount = 1 //default one dimension index, such as array[1]
+    ) //todo support multi dimension index, such as array[1,2]
+    {
+        if ((_indexerCache ??= new()).TryGetValue(indexParameterCount, out var indexerResult))
+        {
+            result = indexerResult;
+            return result is not null;
+        }
+        result = _type
+            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .FirstOrDefault(p => p.GetIndexParameters().Length == indexParameterCount);
+        _indexerCache.Add(indexParameterCount, result);
+        return result is not null;
+    }
+
     public bool TryFindMember(string name, [NotNullWhen(true)] out MemberInfo? result)
     {
-        if (_membersCache.TryGetValue(name, out var memberResult))
+        if ((_membersCache ??= new()).TryGetValue(name, out var memberResult))
         {
             result = memberResult;
             return true;

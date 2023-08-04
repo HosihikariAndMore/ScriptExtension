@@ -737,6 +737,46 @@ else
     );
     #endregion
 
+
+    #region __JS_AtomIsConst
+
+    public static bool JS_AtomIsConst(JsContext* ctx, JsAtom atom)
+    {
+        //ref to void JS_FreeAtom(__int64 a1, int a2)
+        // if ( a2 >= 207 )
+        return atom.Id < 207;
+    }
+
+    #endregion
+
+    #region JS_AtomIsNumericIndex
+    public static bool JS_AtomIsNumericIndex(JsContext* ctx, JsAtom atom)
+    {
+        var func = (delegate* unmanaged<JsContext*, JsAtom, int>)_ptrJsAtomIsNumericIndex.Value;
+        var result = func(ctx, atom);
+        if (result == -1)
+            ThrowPendingException(ctx);
+        return result != 0;
+    }
+
+    private static readonly Lazy<nint> _ptrJsAtomIsNumericIndex = GetPointerLazy(
+        "JS_AtomIsNumericIndex"
+    );
+    #endregion
+    #region JS_AtomIsArrayIndex
+    //static BOOL JS_AtomIsArrayIndex(JSContext *ctx, uint32_t *pval, JSAtom atom)
+    public static bool JS_AtomIsArrayIndex(JsContext* ctx, out uint val, JsAtom atom)
+    {
+        var func = (delegate* unmanaged<JsContext*, out uint, JsAtom, int>)
+            _ptrJsAtomIsArrayIndex.Value;
+        var result = func(ctx, out val, atom);
+        return result != 0;
+    }
+
+    private static readonly Lazy<nint> _ptrJsAtomIsArrayIndex = GetPointerLazy(
+        "JS_AtomIsArrayIndex"
+    );
+    #endregion
     #region JS_NewAtom
     //JSAtom JS_NewAtomLen(JSContext *ctx, const char *str, size_t len)
     public static AutoDropJsAtom JS_NewAtom(JsContext* ctx, string str)

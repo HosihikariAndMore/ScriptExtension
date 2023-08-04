@@ -23,6 +23,7 @@ internal class ClrTypeProxy : ClrTypeProxyBase, IDisposable
     public StaticMemberFinder MemberFinder => _staticFunctionFinder.Value;
     private readonly Lazy<TypeConstructorFinder> _constructorFinder;
     public TypeConstructorFinder ConstructorFinder => _constructorFinder.Value;
+    private MemberReflectCache _memberCache = new();
 
     public ClrTypeProxy(Type type)
     {
@@ -71,72 +72,90 @@ internal class ClrTypeProxy : ClrTypeProxyBase, IDisposable
             data = default;
             return false;
         }
-        if (member is MethodInfo method)
+        switch (member)
         {
-            var helper = new MethodHelper(method);
-            data = new JsPropertyDescriptor
+            case MethodInfo method:
             {
-                Flags = JsPropertyFlags.HasValue,
-                Value = ctxInstance
-                    .NewJsFunctionObject(
-                        (_, _, argv) =>
-                        {
-                            Log.Logger.Trace("call");
-                            return helper.Call(ctxInstance, argv).Steal();
-                        }
-                    )
-                    .Steal(),
-            };
-            Log.Logger.Trace("method");
-            return true;
-        }
-        if (member is PropertyInfo property)
-        {
-            data = new JsPropertyDescriptor
-            {
-                Flags = JsPropertyFlags.GetSet | JsPropertyFlags.Enumerable
-            };
-            if (property.GetMethod is { } getMethod)
-            {
-                var helper = new MethodHelper(getMethod);
-                data.Flags |= JsPropertyFlags.HasGet;
-                data.Getter = ctxInstance
-                    .NewJsFunctionObject(
-                        (_, _, argv) =>
-                        {
-                            Log.Logger.Trace("get");
-                            return helper.Call(ctxInstance, argv).Steal();
-                        }
-                    )
-                    .Steal();
+                if (!_memberCache.GetMethodHelperCache(method, out var helper))
+                {
+                    helper = new MethodHelper(method);
+                    _memberCache.AddMethodHelperCache(method, helper);
+                }
+                data = new JsPropertyDescriptor
+                {
+                    Flags = JsPropertyFlags.HasValue,
+                    Value = ctxInstance
+                        .NewJsFunctionObject(
+                            (_, _, argv) =>
+                            {
+                                Log.Logger.Trace("call");
+                                return helper.Call(ctxInstance, argv).Steal();
+                            }
+                        )
+                        .Steal(),
+                };
+                Log.Logger.Trace("method");
+                return true;
             }
-            if (property.SetMethod is { } setMethod)
+            case PropertyInfo property:
             {
-                var helper = new MethodHelper(setMethod);
-                data.Flags |= JsPropertyFlags.HasSet;
-                data.Setter = ctxInstance
-                    .NewJsFunctionObject(
-                        (_, _, argv) =>
-                        {
-                            Log.Logger.Trace("set");
-                            return helper.Call(ctxInstance, argv).Steal();
-                        }
-                    )
-                    .Steal();
+                data = new JsPropertyDescriptor
+                {
+                    Flags = JsPropertyFlags.GetSet | JsPropertyFlags.Enumerable
+                };
+                if (
+                    !_memberCache.GetPropHelperCache(property, out var getHelper, out var setHelper)
+                )
+                {
+                    if (property.GetMethod is { } getMethod)
+                        getHelper = new MethodHelper(getMethod);
+                    if (property.SetMethod is { } setMethod)
+                        setHelper = new MethodHelper(setMethod);
+                    _memberCache.AddPropHelperCache(property, getHelper, setHelper);
+                }
+                if (getHelper is not null)
+                {
+                    data.Flags |= JsPropertyFlags.HasGet;
+                    data.Getter = ctxInstance
+                        .NewJsFunctionObject(
+                            (_, _, argv) =>
+                            {
+                                Log.Logger.Trace("get");
+                                return getHelper.Call(ctxInstance, argv).Steal();
+                            }
+                        )
+                        .Steal();
+                }
+                if (setHelper is not null)
+                {
+                    data.Flags |= JsPropertyFlags.HasSet;
+                    data.Setter = ctxInstance
+                        .NewJsFunctionObject(
+                            (_, _, argv) =>
+                            {
+                                Log.Logger.Trace("set");
+                                return setHelper.Call(ctxInstance, argv).Steal();
+                            }
+                        )
+                        .Steal();
+                }
+                return true;
             }
-            return true;
-        }
-        if (member is FieldInfo field)
-        {
-            var value = field.GetValue(null);
-            data = new JsPropertyDescriptor
+            case FieldInfo field:
             {
-                Flags = JsPropertyFlags.HasValue | JsPropertyFlags.Enumerable,
-                Value = JsValueCreateHelper.New(value, ctxInstance).Steal()
-            };
-            return true;
+                var value = field.GetValue(null);
+                data = new JsPropertyDescriptor
+                {
+                    Flags = JsPropertyFlags.HasValue | JsPropertyFlags.Enumerable,
+                    Value = JsValueCreateHelper.New(value, ctxInstance).Steal()
+                };
+                return true;
+            }
+            default:
+                throw new NotImplementedException(
+                    $"member type {member.Name}:{member.GetType()} not impl"
+                );
         }
-        throw new NotImplementedException($"member type {member.Name}:{member.GetType()} not impl");
     }
 
     private static void CheckTypeConstructableOrThrow(Type type, int i = -1)
