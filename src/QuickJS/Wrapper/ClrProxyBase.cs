@@ -1,8 +1,10 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 using Hosihikari.VanillaScript.QuickJS.Extensions.Check;
 using Hosihikari.VanillaScript.QuickJS.Helper;
 using Hosihikari.VanillaScript.QuickJS.Types;
+using Hosihikari.VanillaScript.QuickJS.Wrapper.ClrProxy;
 
 namespace Hosihikari.VanillaScript.QuickJS.Wrapper;
 
@@ -351,6 +353,41 @@ public abstract class ClrProxyBase
     #endregion
     #endregion
 
+
+    [UnmanagedCallersOnly]
+    internal static unsafe JsValue ToJson(
+        JsContext* ctx,
+        JsValue thisObj,
+        int argc,
+        JsValue* argvPtr
+    )
+    {
+        try
+        {
+            //var argv = new ReadOnlySpan<JsValue>(argvPtr, argc);
+            //argv.InsureArgumentCount(1);
+            //var arg = argv[0];
+            var val = thisObj;
+            if (
+                TryGetInstance(val, out var proxy)
+                && proxy is ClrInstanceProxy { Instance: var instance }
+            )
+            {
+                var json = JsonSerializer.Serialize(instance);
+                using var obj = JsValueCreateHelper.FromJson(ctx, json);
+                return obj.Steal();
+            }
+            else
+            {
+                using var obj = JsValueCreateHelper.NewObject(ctx); //`{}`
+                return obj.Steal();
+            }
+        }
+        catch (Exception ex)
+        {
+            return Native.JS_ThrowInternalError(ctx, ex);
+        }
+    }
 
     [UnmanagedCallersOnly]
     internal static unsafe JsValue ProtoTypeToString(

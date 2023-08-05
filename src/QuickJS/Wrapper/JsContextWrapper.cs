@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using Hosihikari.VanillaScript.Loader;
-using Hosihikari.VanillaScript.QuickJS.Extensions;
 using Hosihikari.VanillaScript.QuickJS.Helper;
 using Hosihikari.VanillaScript.QuickJS.Types;
 using static Hosihikari.VanillaScript.QuickJS.Types.JsClassDef;
@@ -331,6 +330,12 @@ public class JsContextWrapper
                 Context,
                 JsAtom.BuildIn.ToStringFunc,
                 NewStaticJsFunction("toString", 1, &ClrProxyBase.ProtoTypeToString).Steal(),
+                JsPropertyFlags.Writable | JsPropertyFlags.Configurable
+            );
+            proto.DefineProperty(
+                Context,
+                JsAtom.BuildIn.ToJson,
+                NewStaticJsFunction("toJson", 1, &ClrProxyBase.ToJson).Steal(),
                 JsPropertyFlags.Writable | JsPropertyFlags.Configurable
             );
             Native.JS_SetClassProto(Context, classId, proto.Steal());

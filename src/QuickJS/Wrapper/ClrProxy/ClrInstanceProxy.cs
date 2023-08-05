@@ -2,7 +2,6 @@
 using Hosihikari.VanillaScript.QuickJS.Extensions;
 using Hosihikari.VanillaScript.QuickJS.Helper;
 using Hosihikari.VanillaScript.QuickJS.Types;
-using Hosihikari.VanillaScript.QuickJS.Wrapper;
 using Hosihikari.VanillaScript.QuickJS.Wrapper.Reflect;
 
 namespace Hosihikari.VanillaScript.QuickJS.Wrapper.ClrProxy;
@@ -127,14 +126,21 @@ internal class ClrInstanceProxy : ClrInstanceProxyBase, IDisposable, IFormattabl
         var name = propName.ToString(ctxInstance);
         if (!MemberFinder.TryFindMember(name, out var member))
         {
+            if (MemberFinder.TryGetIndexer(out var indexProp))
+            {
+                InvokeAsProperty(indexProp, out data, new object[] { name }); //item["xxx"]
+                return true;
+            }
             data = default;
             return false;
         }
         switch (member)
         {
             case PropertyInfo property:
+            {
                 InvokeAsProperty(property, out data);
                 return true;
+            }
             case MethodInfo method:
             {
                 if (!_memberCache.GetMethodHelperCache(method, out var helper))

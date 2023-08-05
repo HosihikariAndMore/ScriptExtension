@@ -6,7 +6,7 @@ namespace Hosihikari.VanillaScript.QuickJS.Wrapper.Reflect;
 public class InstanceMemberFinder
 {
     private readonly Type _type;
-    private Dictionary<string, MemberInfo>? _membersCache = null;
+    private Dictionary<string, MemberInfo?>? _membersCache = null;
     private Dictionary<int, PropertyInfo?>? _indexerCache = null;
 
     public InstanceMemberFinder(Type type)
@@ -39,7 +39,7 @@ public class InstanceMemberFinder
         if ((_membersCache ??= new()).TryGetValue(name, out var memberResult))
         {
             result = memberResult;
-            return true;
+            return result is not null;
         }
         memberResult = _type
             .GetMember(name, BindingFlags.Public | BindingFlags.Instance)
@@ -47,6 +47,13 @@ public class InstanceMemberFinder
         if (memberResult is null)
         {
             result = null;
+            _membersCache.Add(name, memberResult);
+            return false;
+        }
+        if (memberResult is PropertyInfo property && property.GetIndexParameters().Any())
+        { //not include indexer `item[xxx]`
+            result = null;
+            _membersCache.Add(name, memberResult);
             return false;
         }
         _membersCache.Add(name, memberResult);

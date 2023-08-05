@@ -2,7 +2,6 @@
 using Hosihikari.VanillaScript.QuickJS.Extensions;
 using Hosihikari.VanillaScript.QuickJS.Helper;
 using Hosihikari.VanillaScript.QuickJS.Types;
-using Hosihikari.VanillaScript.QuickJS.Wrapper;
 using Hosihikari.VanillaScript.QuickJS.Wrapper.Reflect;
 
 namespace Hosihikari.VanillaScript.QuickJS.Wrapper.ClrProxy;

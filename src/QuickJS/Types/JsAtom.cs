@@ -212,6 +212,8 @@ public struct JsAtom
         //DEF(ok, "ok")
         //#endif
         //DEF(toJSON, "toJSON")
+        //js_json_check
+        public static JsAtom ToJson = 0x8B;
         // /* class names */
         //DEF(Object, "Object")
         //DEF(Array, "Array")
