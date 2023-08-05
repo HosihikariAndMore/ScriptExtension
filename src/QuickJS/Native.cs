@@ -241,6 +241,30 @@ else
     );
     #endregion
 
+    #region JS_GetPropertyInternal
+    //JSValue JS_GetPropertyInternal(JSContext *ctx, JSValueConst obj,JSAtom prop, JSValueConst receiver,JS_BOOL throw_ref_error);
+    public static AutoDropJsValue JS_GetPropertyInternal(
+        JsContext* ctx,
+        JsValue obj,
+        JsAtom prop,
+        bool throwRefError = false
+    )
+    {
+        var result = (
+            (delegate* unmanaged<JsContext*, JsValue, JsAtom, JsValue, byte, JsValue>)
+                _ptrJsGetPropertyInternal.Value
+        )(ctx, obj, prop, obj, throwRefError ? (byte)1 : (byte)0);
+        if (result.IsException())
+        {
+            ThrowPendingException(ctx);
+        }
+        return new AutoDropJsValue(result, ctx);
+    }
+
+    private static readonly Lazy<nint> _ptrJsGetPropertyInternal = GetPointerLazy(
+        "JS_GetPropertyInternal"
+    );
+    #endregion
     #region JS_GetPropertyStr
     public static AutoDropJsValue JS_GetPropertyStr(
         JsContext* ctx,
@@ -334,6 +358,32 @@ else
 
     private static readonly Lazy<nint> _ptrJsDefinePropertyValue = GetPointerLazy(
         "JS_DefinePropertyValue"
+    );
+    #endregion
+
+    #region JS_SetPropertyInternal
+
+    //int JS_SetPropertyInternal(JSContext *ctx, JSValueConst this_obj,JSAtom prop, JSValue val, int flags)
+    public static bool JS_SetPropertyInternal(
+        JsContext* ctx,
+        JsValue thisObj,
+        JsAtom prop,
+        JsValue val,
+        JsPropertyFlags flags = JsPropertyFlags.Throw
+    )
+    {
+        var func = (delegate* unmanaged<JsContext*, JsValue, JsAtom, JsValue, int, int>)
+            _ptrJsSetPropertyInternal.Value;
+        var result = func(ctx, thisObj, prop, val, (int)flags);
+        if (result == -1)
+        {
+            ThrowPendingException(ctx);
+        }
+        return result == 1;
+    }
+
+    private static readonly Lazy<nint> _ptrJsSetPropertyInternal = GetPointerLazy(
+        "JS_SetPropertyInternal"
     );
     #endregion
     #region JS_DefinePropertyValueStr
@@ -680,30 +730,89 @@ else
     //private static readonly Lazy<nint> _ptrJsThrowError = GetPointerLazy("JS_ThrowError2");
     //#endregion
 
+    #region JS_HasProperty
+
+    //int JS_HasProperty(JSContext *ctx, JSValueConst obj, JSAtom prop)
+    public static bool JS_HasProperty(JsContext* ctx, JsValue obj, JsAtom prop)
+    {
+        var func = (delegate* unmanaged<JsContext*, JsValue, JsAtom, int>)_ptrJsHasProperty.Value;
+        var result = func(ctx, obj, prop);
+        if (result == -1)
+            ThrowPendingException(ctx);
+        return result != 0;
+    }
+
+    private static readonly Lazy<nint> _ptrJsHasProperty = GetPointerLazy("JS_HasProperty");
+
+    #endregion
+    #region JS_Throw
+    //JSValue JS_Throw(JSContext *ctx, JSValue obj)
+    public static JsValue JS_Throw(JsContext* ctx, JsValue obj)
+    {
+        var func = (delegate* unmanaged<JsContext*, JsValue, JsValue>)_ptrJsThrow.Value;
+        var result = func(ctx, obj);
+        if (!result.IsException())
+        {
+            Log.Logger.Error("throw error may failed");
+        }
+        return result;
+    }
+
+    private static readonly Lazy<nint> _ptrJsThrow = GetPointerLazy("JS_Throw");
+
+    #endregion
     #region JS_ThrowInternalError
     //JSValue __attribute__((format(printf, 2, 3))) JS_ThrowInternalError(JSContext *ctx, const char *fmt, ...);
 
     public static JsValue JS_ThrowInternalError(JsContext* ctx, Exception exception)
     {
-        return JS_ThrowInternalError(ctx, exception.ToString());
+        return JS_ThrowInternalError(ctx, exception.Message, exception.StackTrace);
     }
 
-    public static JsValue JS_ThrowInternalError(JsContext* ctx, string message)
+    public static JsValue JS_ThrowInternalError(
+        JsContext* ctx,
+        string message,
+        string? stack = null
+    )
     {
-        var func = (delegate* unmanaged<JsContext*, byte*, JsValue>)_ptrJsThrowInternalError.Value;
+        var func = (delegate* unmanaged<JsContext*, byte*, byte*, JsValue>)
+            _ptrJsThrowInternalError.Value;
+        fixed (
+            byte* format = StringUtils.StringToManagedUtf8(
+                "%s" /* prevent format*/
+            )
+        )
         fixed (
             byte* ptr = StringUtils.StringToManagedUtf8(
-                message.Replace("%%", "%") /* prevent format*/
+                message /* prevent format*/
             )
         )
         {
-            var result = func(ctx, ptr);
+            var result = func(ctx, format, ptr);
             if (!result.IsException())
             {
                 //it seem always return exception type
                 //so if not exception, it means throw failed ?
                 Log.Logger.Error("throw error may failed");
             }
+#if true// get thrown exception and append clr stack after js
+            if (!string.IsNullOrWhiteSpace(stack))
+            {
+                var error = JS_GetException(ctx); //get error object just throw
+                if (error.HasProperty(JsAtom.BuildIn.Stack))
+                {
+                    var jsStack = error.GetStringProperty(JsAtom.BuildIn.Stack);
+                    //append clr stack
+                    jsStack += string.Join(
+                        Environment.NewLine,
+                        from line in stack.Split(Environment.NewLine)
+                        select "    " + line.TrimStart()
+                    );
+                    error.SetProperty(JsAtom.BuildIn.Stack, JS_NewString(ctx, jsStack).Steal());
+                }
+                JS_Throw(ctx, error.Value); //rethrow processed error
+            }
+#endif
             return result;
         }
     }
@@ -932,6 +1041,26 @@ static JSValue JS_CallFree(JSContext *ctx, JSValue func_obj, JSValueConst this_o
     private static readonly Lazy<nint> _ptrJsGetPropertyUint32 = GetPointerLazy(
         "JS_GetPropertyUint32"
     );
+
+    #endregion
+
+    #region JS_SetPropertyStr
+
+    //int JS_SetPropertyStr(JSContext *ctx, JSValueConst this_obj,const char* prop, JSValue val)
+    public static bool JS_SetPropertyStr(JsContext* ctx, JsValue thisObj, string prop, JsValue val)
+    {
+        var func = (delegate* unmanaged<JsContext*, JsValue, byte*, JsValue, int>)
+            _ptrJsSetPropertyStr.Value;
+        fixed (byte* p = StringUtils.StringToManagedUtf8(prop))
+        {
+            var result = func(ctx, thisObj, p, val);
+            if (result == -1)
+                ThrowPendingException(ctx);
+            return result != 0;
+        }
+    }
+
+    private static readonly Lazy<nint> _ptrJsSetPropertyStr = GetPointerLazy("JS_SetPropertyStr");
 
     #endregion
 

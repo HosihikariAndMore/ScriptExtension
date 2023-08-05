@@ -162,7 +162,7 @@ internal class JsLog
         {
             Native.JS_ThrowInternalError(ctx, "");
             using var error = Native.JS_GetException(ctx);
-            var stack = error.Value.GetStringProperty(ctx, "stack");
+            var stack = error.Value.GetStringProperty(ctx, JsAtom.BuildIn.Stack);
             //     at trace (native)
             //    at <anonymous> (test.js:3)
             var lineStr = stack.Split('\n')[1]; //at <anonymous> (test.js:3)
@@ -218,7 +218,7 @@ internal class JsLog
             if (arg.Tag == JsTag.Object && Native.JS_IsError(ctx, arg))
             {
                 sb.AppendLine();
-                sb.AppendLine(arg.GetStringProperty(ctx, "stack"));
+                sb.AppendLine(arg.GetStringProperty(ctx, JsAtom.BuildIn.Stack));
             }
             else
             {

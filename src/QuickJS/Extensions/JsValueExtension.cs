@@ -119,7 +119,22 @@ public static class JsValueExtension
     )
     {
         using var val = Native.JS_GetPropertyStr(ctx, @this, propertyName);
-        return Native.JS_ToCString(ctx, val.Value);
+        return val.ToString();
+    }
+
+    public static unsafe string GetStringProperty(this JsValue @this, JsContext* ctx, JsAtom atom)
+    {
+        using var val = Native.JS_GetPropertyInternal(ctx, @this, atom);
+        return val.ToString();
+    }
+
+    public static unsafe AutoDropJsValue GetProperty(
+        this JsValue @this,
+        JsContext* ctx,
+        JsAtom atom
+    )
+    {
+        return Native.JS_GetPropertyInternal(ctx, @this, atom);
     }
 
     public static unsafe AutoDropJsValue GetProperty(
@@ -129,6 +144,17 @@ public static class JsValueExtension
     )
     {
         return Native.JS_GetPropertyStr(ctx, @this, propertyName);
+    }
+
+    public static unsafe bool HasProperty(this JsValue @this, JsContext* ctx, JsAtom atom)
+    {
+        return Native.JS_HasProperty(ctx, @this, atom);
+    }
+
+    public static unsafe bool HasProperty(this JsValue @this, JsContext* ctx, string propertyName)
+    {
+        using var atom = Native.JS_NewAtom(ctx, propertyName);
+        return HasProperty(@this, ctx, atom.Value);
     }
 
     //JS_ToString
@@ -143,12 +169,33 @@ public static class JsValueExtension
     public static unsafe bool SetProperty(
         this JsValue @this,
         JsContext* ctx,
-        JsValue propertyName,
+        JsValue propertyKey,
         JsValue value,
         JsPropertyFlags flags = JsPropertyFlags.CWE
     )
     {
-        return Native.JS_SetPropertyValue(ctx, @this, propertyName, value, flags);
+        return Native.JS_SetPropertyValue(ctx, @this, propertyKey, value, flags);
+    }
+
+    public static unsafe bool SetProperty(
+        this JsValue @this,
+        JsContext* ctx,
+        string propertyName,
+        JsValue value
+    )
+    {
+        return Native.JS_SetPropertyStr(ctx, @this, propertyName, value);
+    }
+
+    public static unsafe bool SetProperty(
+        this JsValue @this,
+        JsContext* ctx,
+        JsAtom atom,
+        JsValue value,
+        JsPropertyFlags flags = JsPropertyFlags.CWE
+    )
+    {
+        return Native.JS_SetPropertyInternal(ctx, @this, atom, value, flags);
     }
 
     public static unsafe bool DefineProperty(

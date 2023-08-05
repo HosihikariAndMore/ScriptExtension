@@ -257,7 +257,12 @@ public abstract class ClrProxyBase
             {
                 Log.Logger.Warning("JsClassFinalizer " + e);
             }
-            Log.Logger.Trace("JsClassFinalizer " + opaque + " Current Active: " + --activeCount);
+
+            if (--activeCount == 0)
+            {
+                //Log.Logger.Trace("JsClassFinalizer " + opaque + " Current Active: " +  activeCount);
+                Log.Logger.Trace("JsClassFinalizer " + opaque + " All Active ClrProxy Cleared.");
+            }
         }
         else
         {
@@ -325,14 +330,20 @@ public abstract class ClrProxyBase
     {
         if (!TryGetInstance(@this, out instance))
         {
-            Native.JS_ThrowInternalError(ctx, "JsClassCall: unknown object from js.");
+            Native.JS_ThrowInternalError(
+                ctx,
+                new NullReferenceException("JsClassCall: unknown object from js.")
+            );
             ctxInstance = null;
             return true;
         }
 
         if (!JsContextWrapper.TryGet((nint)ctx, out ctxInstance))
         {
-            Native.JS_ThrowInternalError(ctx, "JsClassCall: unknown context from js.");
+            Native.JS_ThrowInternalError(
+                ctx,
+                new NullReferenceException("JsClassCall: unknown context from js.")
+            );
             return true;
         }
         return false;
@@ -354,7 +365,10 @@ public abstract class ClrProxyBase
             var argv = new ReadOnlySpan<JsValue>(argvPtr, argc);
             if (!TryGetInstance(thisObj, out var data))
             {
-                return Native.JS_ThrowInternalError(ctx, "could not find thisObj calling toString");
+                return Native.JS_ThrowInternalError(
+                    ctx,
+                    new NullReferenceException("could not find thisObj calling toString")
+                );
             }
             string? format = null;
             if (argv.InsureArgumentCount(0, 1) == 1)

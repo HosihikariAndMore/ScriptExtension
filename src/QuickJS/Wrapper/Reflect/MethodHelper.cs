@@ -10,7 +10,7 @@ public class IndexerMethodHelper : MethodHelper
 {
     private readonly object[] _indexer;
 
-    public override AutoDropJsValue Call(
+    public override AutoDropJsValue Invoke(
         JsContextWrapper ctx,
         ReadOnlySpan<JsValue> argv,
         JsValue thisObj
@@ -73,7 +73,7 @@ public class MethodHelper
         _parametersCache = new Lazy<ParameterInfo[]>(_method.GetParameters);
     }
 
-    public virtual AutoDropJsValue Call(
+    public virtual AutoDropJsValue Invoke(
         JsContextWrapper ctx,
         ReadOnlySpan<JsValue> argv,
         JsValue thisObj

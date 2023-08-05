@@ -33,11 +33,6 @@ public class StaticMemberFinder
         return true;
     }
 
-    public IEnumerable<MemberInfo> EnumStaticMembers()
-    {
-        foreach (var member in _type.GetMembers(BindingFlags.Public | BindingFlags.Static))
-        {
-            yield return member;
-        }
-    }
+    public IEnumerable<MemberInfo> EnumStaticMembers() =>
+        _type.GetMembers(BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod);
 }

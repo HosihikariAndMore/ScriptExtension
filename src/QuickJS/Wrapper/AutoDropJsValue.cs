@@ -100,6 +100,14 @@ public class AutoDropJsValue : IDisposable
         }
     }
 
+    public string GetStringProperty(JsAtom atom)
+    {
+        unsafe
+        {
+            return _value.GetStringProperty(_context, atom);
+        }
+    }
+
     public override string ToString()
     {
         unsafe
@@ -162,5 +170,31 @@ public class AutoDropJsValue : IDisposable
     {
         using var value = ctx.NewJsFunction(funcName, argumentLength, func, protoType);
         _value.DefineProperty(ctx.Context, funcName, value.Steal(), propFlags);
+    }
+
+    public unsafe bool HasProperty(JsAtom atom)
+    {
+        return _value.HasProperty(_context, atom);
+    }
+
+    public unsafe bool HasProperty(string propertyName)
+    {
+        return _value.HasProperty(_context, propertyName);
+    }
+
+    public void SetProperty(JsAtom atom, JsValue value)
+    {
+        unsafe
+        {
+            _value.SetProperty(_context, atom, value);
+        }
+    }
+
+    public void SetProperty(string propertyName, JsValue value)
+    {
+        unsafe
+        {
+            _value.SetProperty(_context, propertyName, value);
+        }
     }
 }

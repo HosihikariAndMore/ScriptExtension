@@ -42,18 +42,16 @@ internal class ClrInstanceProxy : ClrInstanceProxyBase, IDisposable, IFormattabl
 
     protected override JsPropertyEnum[] GetOwnPropertyNames(JsContextWrapper ctxInstance)
     {
-        var ownPropertyNames = MemberFinder
-            .EnumMembers()
-            .Select(
-                member =>
-                    new JsPropertyEnum
-                    {
-                        Atom = ctxInstance.NewAtom(member.Name).Steal(),
-                        IsEnumerable = member is FieldInfo or PropertyInfo //function is not enumerable in for .. in loop in js
-                    }
-            )
-            .ToArray();
-        Log.Logger.Trace("property" + ownPropertyNames.Length);
+        var ownPropertyNames = (
+            from member in MemberFinder.EnumMembers()
+            let enumerable = member is FieldInfo or PropertyInfo //function is not enumerable in for .. in loop in js
+            where enumerable || member is MethodInfo
+            select new JsPropertyEnum
+            {
+                Atom = ctxInstance.NewAtom(member.Name).Steal(),
+                IsEnumerable = enumerable
+            }
+        ).ToArray();
         return ownPropertyNames;
     }
 
@@ -103,11 +101,7 @@ internal class ClrInstanceProxy : ClrInstanceProxyBase, IDisposable, IFormattabl
                 data.Flags |= JsPropertyFlags.HasGet;
                 data.Getter = ctxInstance
                     .NewJsFunctionObject(
-                        (_, thisObj, argv) =>
-                        {
-                            Log.Logger.Trace("get");
-                            return getHelper.Call(ctxInstance, argv, thisObj).Steal();
-                        }
+                        (_, thisObj, argv) => getHelper.Invoke(ctxInstance, argv, thisObj).Steal()
                     )
                     .Steal();
             }
@@ -116,11 +110,7 @@ internal class ClrInstanceProxy : ClrInstanceProxyBase, IDisposable, IFormattabl
                 data.Flags |= JsPropertyFlags.HasSet;
                 data.Setter = ctxInstance
                     .NewJsFunctionObject(
-                        (_, thisObj, argv) =>
-                        {
-                            Log.Logger.Trace("set");
-                            return setHelper.Call(ctxInstance, argv, thisObj).Steal();
-                        }
+                        (_, thisObj, argv) => setHelper.Invoke(ctxInstance, argv, thisObj).Steal()
                     )
                     .Steal();
             }
@@ -128,7 +118,6 @@ internal class ClrInstanceProxy : ClrInstanceProxyBase, IDisposable, IFormattabl
         //bool withIndex = propName.TryGetIndex(ctxInstance, out uint idx);
         if (propName.TryGetIndex(ctxInstance, out var idx)) //todo support multi dimension indexer
         {
-            Log.Logger.Trace("GetOwnProperty: [" + idx + "]");
             if (MemberFinder.TryGetIndexer(out var indexer))
             {
                 InvokeAsProperty(indexer, out data, new object[] { idx });
@@ -136,7 +125,6 @@ internal class ClrInstanceProxy : ClrInstanceProxyBase, IDisposable, IFormattabl
             }
         }
         var name = propName.ToString(ctxInstance);
-        Log.Logger.Trace("GetOwnProperty:" + name);
         if (!MemberFinder.TryFindMember(name, out var member))
         {
             data = default;
@@ -159,15 +147,10 @@ internal class ClrInstanceProxy : ClrInstanceProxyBase, IDisposable, IFormattabl
                     Flags = JsPropertyFlags.HasValue,
                     Value = ctxInstance
                         .NewJsFunctionObject(
-                            (_, thisObj, argv) =>
-                            {
-                                Log.Logger.Trace("call");
-                                return helper.Call(ctxInstance, argv, thisObj).Steal();
-                            }
+                            (_, thisObj, argv) => helper.Invoke(ctxInstance, argv, thisObj).Steal()
                         )
                         .Steal(),
                 };
-                Log.Logger.Trace("method");
                 return true;
             }
             case FieldInfo field:

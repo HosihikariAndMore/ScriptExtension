@@ -14,13 +14,8 @@ public class InstanceMemberFinder
         _type = type;
     }
 
-    public IEnumerable<MemberInfo> EnumMembers()
-    {
-        foreach (var member in _type.GetMembers(BindingFlags.Public | BindingFlags.Instance))
-        {
-            yield return member;
-        }
-    }
+    public IEnumerable<MemberInfo> EnumMembers() =>
+        _type.GetMembers(BindingFlags.Public | BindingFlags.Instance | BindingFlags.InvokeMethod);
 
     public bool TryGetIndexer(
         [NotNullWhen(true)] out PropertyInfo? result,

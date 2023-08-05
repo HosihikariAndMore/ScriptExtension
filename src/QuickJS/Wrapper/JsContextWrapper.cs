@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using Hosihikari.VanillaScript.Loader;
+using Hosihikari.VanillaScript.QuickJS.Extensions;
 using Hosihikari.VanillaScript.QuickJS.Helper;
 using Hosihikari.VanillaScript.QuickJS.Types;
 using static Hosihikari.VanillaScript.QuickJS.Types.JsClassDef;
@@ -325,15 +326,14 @@ public class JsContextWrapper
                 def.Exotic = (JsClassExoticMethods*)
                     ClrProxyBase.JsClassExoticMethods.Value.ToPointer();
             classId = RegisterClass(name, def);
-            var proto = NewObject().Steal();
-            Native.JS_DefinePropertyValue(
+            var proto = NewObject();
+            proto.DefineProperty(
                 Context,
-                proto,
                 JsAtom.BuildIn.ToStringFunc,
                 NewStaticJsFunction("toString", 1, &ClrProxyBase.ProtoTypeToString).Steal(),
                 JsPropertyFlags.Writable | JsPropertyFlags.Configurable
             );
-            Native.JS_SetClassProto(Context, classId, proto);
+            Native.JS_SetClassProto(Context, classId, proto.Steal());
         }
         return classId;
     }
