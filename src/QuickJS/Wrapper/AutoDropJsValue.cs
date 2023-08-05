@@ -116,6 +116,16 @@ public class AutoDropJsValue : IDisposable
         }
     }
 
+    public unsafe bool DefineProperty(
+        JsContext* ctx,
+        JsAtom propertyAtom,
+        JsValue value,
+        JsPropertyFlags flags = JsPropertyFlags.CWE
+    )
+    {
+        return _value.DefineProperty(ctx, propertyAtom, value, flags);
+    }
+
     public void DefineProperty(
         JsContextWrapper ctx,
         string exists,

@@ -66,7 +66,7 @@ internal class DirectoryModule
                                 thisObj,
                                 (resolve, reject),
                                 Task.Run(() => Directory.GetFiles(directory)),
-                                result => JsValueCreateHelper.NewArray(ctx, result).Steal()
+                                result => JsValueCreateHelper.NewArray(ctx, result)
                             );
                             return promise.Steal();
                             //Native.JS_Call(ctx, resolve, safeThis.Instance,)
@@ -107,7 +107,7 @@ internal class DirectoryModule
                                 thisObj,
                                 (resolve, reject),
                                 Task.Run(() => Directory.GetDirectories(directory)),
-                                result => JsValueCreateHelper.NewArray(ctx, result).Steal()
+                                result => JsValueCreateHelper.NewArray(ctx, result)
                             );
                             return promise.Steal();
                             //Native.JS_Call(ctx, resolve, safeThis.Instance,)

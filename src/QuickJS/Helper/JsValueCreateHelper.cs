@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using Hosihikari.VanillaScript.Hook.QuickJS;
 using Hosihikari.VanillaScript.QuickJS.Types;
 using Hosihikari.VanillaScript.QuickJS.Wrapper;
 using Hosihikari.VanillaScript.QuickJS.Wrapper.ClrProxy;
@@ -131,7 +130,7 @@ internal static class JsValueCreateHelper
                     thisObj,
                     (resolve, reject),
                     ConvertTaskAsync(task),
-                    result => New(result, ctx, thisObj).Steal()
+                    result => New(result, ctx, thisObj)
                 );
                 return promise;
             }

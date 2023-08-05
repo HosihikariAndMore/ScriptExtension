@@ -66,7 +66,7 @@ internal static class FileModule
                                 thisObj,
                                 (resolve, reject),
                                 File.ReadAllTextAsync(file),
-                                result => JsValueCreateHelper.NewString(ctx, result).Steal()
+                                result => JsValueCreateHelper.NewString(ctx, result)
                             );
                             return promise.Steal();
                             //Native.JS_Call(ctx, resolve, safeThis.Instance,)

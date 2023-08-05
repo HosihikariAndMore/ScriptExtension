@@ -1,5 +1,4 @@
 ﻿using Hosihikari.Minecraft.Extension;
-using Hosihikari.VanillaScript.QuickJS.Extensions;
 using Hosihikari.VanillaScript.QuickJS.Types;
 using Hosihikari.VanillaScript.QuickJS.Wrapper;
 
@@ -7,11 +6,14 @@ namespace Hosihikari.VanillaScript.QuickJS.Helper;
 
 public static class JsPromiseHelper
 {
-    internal static JsValue BuildErrorJsValue(this JsContextWrapper ctx, Exception exception)
+    internal static AutoDropJsValue BuildErrorJsValue(
+        this JsContextWrapper ctx,
+        Exception exception
+    )
     {
         unsafe
         {
-            var errorObj = JsValueCreateHelper.NewError(ctx.Context).Steal();
+            var errorObj = JsValueCreateHelper.NewError(ctx.Context);
             /*
                 JS_DefinePropertyValue(ctx, obj, JS_ATOM_message,
                                JS_NewString(ctx, buf),
@@ -53,13 +55,22 @@ public static class JsPromiseHelper
                     {
                         if (JsContextWrapper.TryGet(ctxPtr, out var ctx))
                         {
-                            Native.JS_Call(
-                                ctx.Context,
-                                promise.resolve.Instance,
-                                safeThis.Instance,
-                                0,
-                                null
-                            );
+                            try
+                            {
+                                using var callResult = Native.JS_Call(
+                                    ctx.Context,
+                                    promise.resolve.Instance,
+                                    safeThis.Instance,
+                                    0,
+                                    null
+                                );
+                            }
+                            finally
+                            {
+                                safeThis.FreeThis();
+                                promise.resolve.FreeThis();
+                                promise.reject.FreeThis();
+                            }
                         }
                     }
                 });
@@ -68,19 +79,28 @@ public static class JsPromiseHelper
             {
                 LevelTick.PostTick(() =>
                 {
-                    var reason = ex.ToString();
                     unsafe
                     {
                         if (JsContextWrapper.TryGet(ctxPtr, out var ctx))
                         {
-                            var reasonObj = ctx.BuildErrorJsValue(ex);
-                            Native.JS_Call(
-                                ctx.Context,
-                                promise.reject.Instance,
-                                safeThis.Instance,
-                                1,
-                                &reasonObj
-                            );
+                            try
+                            {
+                                using var reasonObj = ctx.BuildErrorJsValue(ex);
+                                var reasonValue = reasonObj.Value;
+                                using var callResult = Native.JS_Call(
+                                    ctx.Context,
+                                    promise.reject.Instance,
+                                    safeThis.Instance,
+                                    1,
+                                    &reasonValue
+                                );
+                            }
+                            finally
+                            {
+                                safeThis.FreeThis();
+                                promise.resolve.FreeThis();
+                                promise.reject.FreeThis();
+                            }
                         }
                     }
                 });
@@ -102,7 +122,7 @@ public static class JsPromiseHelper
         JsValue thisObj,
         (SafeJsValue resolve, SafeJsValue reject) promise,
         Task<T> tasks,
-        Func<T, JsValue> fetchResult
+        Func<T, AutoDropJsValue> fetchResult
     )
     {
         var safeThis = new SafeJsValue(thisObj, ctxPtr);
@@ -113,21 +133,28 @@ public static class JsPromiseHelper
                 var result = await tasks.ConfigureAwait(false);
                 LevelTick.PostTick(() =>
                 {
-                    var resultObj = fetchResult(result);
+                    using var resultObj = fetchResult(result);
+                    var resultValue = resultObj.Value;
                     unsafe
                     {
                         if (JsContextWrapper.TryGet(ctxPtr, out var ctx))
                         {
-                            Native.JS_Call(
-                                ctx.Context,
-                                promise.resolve.Instance,
-                                safeThis.Instance,
-                                1,
-                                &resultObj
-                            );
-                            safeThis.FreeThis();
-                            promise.resolve.FreeThis();
-                            promise.reject.FreeThis();
+                            try
+                            {
+                                using var callResult = Native.JS_Call(
+                                    ctx.Context,
+                                    promise.resolve.Instance,
+                                    safeThis.Instance,
+                                    1,
+                                    &resultValue
+                                );
+                            }
+                            finally
+                            {
+                                safeThis.FreeThis();
+                                promise.resolve.FreeThis();
+                                promise.reject.FreeThis();
+                            }
                         }
                     }
                 });
@@ -140,17 +167,24 @@ public static class JsPromiseHelper
                     {
                         if (JsContextWrapper.TryGet(ctxPtr, out var ctx))
                         {
-                            var reasonObj = ctx.BuildErrorJsValue(ex);
-                            Native.JS_Call(
-                                ctx.Context,
-                                promise.reject.Instance,
-                                safeThis.Instance,
-                                1,
-                                &reasonObj
-                            );
-                            safeThis.FreeThis();
-                            promise.resolve.FreeThis();
-                            promise.reject.FreeThis();
+                            try
+                            {
+                                using var reasonObj = ctx.BuildErrorJsValue(ex);
+                                var reasonValue = reasonObj.Value;
+                                using var callResult = Native.JS_Call(
+                                    ctx.Context,
+                                    promise.reject.Instance,
+                                    safeThis.Instance,
+                                    1,
+                                    &reasonValue
+                                );
+                            }
+                            finally
+                            {
+                                safeThis.FreeThis();
+                                promise.resolve.FreeThis();
+                                promise.reject.FreeThis();
+                            }
                         }
                     }
                 });
