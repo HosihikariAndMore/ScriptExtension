@@ -10,7 +10,11 @@ public class IndexerMethodHelper : MethodHelper
 {
     private readonly object[] _indexer;
 
-    public override AutoDropJsValue Call(JsContextWrapper ctx, ReadOnlySpan<JsValue> argv)
+    public override AutoDropJsValue Call(
+        JsContextWrapper ctx,
+        ReadOnlySpan<JsValue> argv,
+        JsValue thisObj
+    )
     {
         try
         {
@@ -32,7 +36,7 @@ public class IndexerMethodHelper : MethodHelper
                 }
             }
             var result = _method.Invoke(_instance, argvClr);
-            return JsValueCreateHelper.New(result, ctx);
+            return JsValueCreateHelper.New(result, ctx, thisObj);
         }
         catch (Exception ex)
         {
@@ -69,7 +73,11 @@ public class MethodHelper
         _parametersCache = new Lazy<ParameterInfo[]>(_method.GetParameters);
     }
 
-    public virtual AutoDropJsValue Call(JsContextWrapper ctx, ReadOnlySpan<JsValue> argv)
+    public virtual AutoDropJsValue Call(
+        JsContextWrapper ctx,
+        ReadOnlySpan<JsValue> argv,
+        JsValue thisObj
+    )
     {
         try
         {
@@ -89,7 +97,7 @@ public class MethodHelper
                 }
             }
             var result = _method.Invoke(_instance, argvClr);
-            return JsValueCreateHelper.New(result, ctx);
+            return JsValueCreateHelper.New(result, ctx, thisObj);
         }
         catch (Exception ex)
         {

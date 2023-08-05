@@ -1,10 +1,10 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Hosihikari.VanillaScript.Modules.Clr;
 using Hosihikari.VanillaScript.QuickJS.Exceptions;
 using Hosihikari.VanillaScript.QuickJS.Types;
 using Hosihikari.VanillaScript.QuickJS.Wrapper;
+using Hosihikari.VanillaScript.QuickJS.Wrapper.ClrProxy;
 
 namespace Hosihikari.VanillaScript.QuickJS.Extensions;
 

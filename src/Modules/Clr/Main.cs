@@ -1,10 +1,10 @@
 ﻿using System.ComponentModel;
-using System.Reflection;
 using Hosihikari.VanillaScript.QuickJS.Extensions;
 using Hosihikari.VanillaScript.QuickJS.Extensions.Check;
 using Hosihikari.VanillaScript.QuickJS.Helper;
 using Hosihikari.VanillaScript.QuickJS.Types;
 using Hosihikari.VanillaScript.QuickJS.Wrapper;
+using Hosihikari.VanillaScript.QuickJS.Wrapper.ClrProxy;
 using Hosihikari.VanillaScript.QuickJS.Wrapper.Reflect;
 
 namespace Hosihikari.VanillaScript.Modules.Clr;

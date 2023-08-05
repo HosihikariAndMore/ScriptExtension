@@ -1,8 +1,10 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Hosihikari.VanillaScript.Hook.QuickJS;
 using Hosihikari.VanillaScript.QuickJS.Types;
 using Hosihikari.VanillaScript.QuickJS.Wrapper;
+using Hosihikari.VanillaScript.QuickJS.Wrapper.ClrProxy;
 
 namespace Hosihikari.VanillaScript.QuickJS.Helper;
 
@@ -91,27 +93,48 @@ internal static class JsValueCreateHelper
         throw new NotImplementedException($"new {typeof(T)} is not support");
     }
 
-    public static AutoDropJsValue New(object? val, JsContextWrapper ctx)
+    public static AutoDropJsValue New(object? val, JsContextWrapper ctx, JsValue thisObj)
     {
         unsafe
         {
-            return New(val, ctx.Context);
+            return New(val, ctx.Context, thisObj);
         }
     }
 
-    public static AutoDropJsValue New<T>(T? val, JsContextWrapper ctx)
+    private static async Task<object> ConvertTaskAsync(Task task)
     {
-        unsafe
-        {
-            return New(val, ctx.Context);
-        }
+        await task.ConfigureAwait(false);
+        var result = task.GetType().GetProperty("Result")?.GetValue(task);
+        return result ?? Undefined;
     }
 
-    public static unsafe AutoDropJsValue New(object? val, JsContext* ctx)
+    public static unsafe AutoDropJsValue New(object? val, JsContext* ctx, JsValue thisObj)
     {
         if (NewUnmanagedInternal(val, out var jsValue))
         {
             return new AutoDropJsValue(jsValue.Value, ctx);
+        }
+
+        if (val is Task task) //all Task<T> is `true` in this expression, but need to get Result to get the real value
+        {
+            if (task.GetType() == typeof(Task)) //Task has no Result property
+            {
+                var promise = NewPromise(ctx, out var resolve, out var reject);
+                JsPromiseHelper.AwaitTask((nint)ctx, thisObj, (resolve, reject), task);
+                return promise;
+            }
+            //Task<T> but unknown T
+            {
+                var promise = NewPromise(ctx, out var resolve, out var reject);
+                JsPromiseHelper.AwaitTask(
+                    (nint)ctx,
+                    thisObj,
+                    (resolve, reject),
+                    ConvertTaskAsync(task),
+                    result => New(result, ctx, thisObj).Steal()
+                );
+                return promise;
+            }
         }
         return val switch
         {
@@ -128,33 +151,27 @@ internal static class JsValueCreateHelper
             float[] ff => NewArray(ctx, ff),
             double[] dd => NewArray(ctx, dd),
             decimal[] dec => NewArray(ctx, dec),
-            _ => throw new NotImplementedException($"new {val.GetType()} is not support")
+            //_ => throw new NotImplementedException($"new {val.GetType()} is not support")
+            _
+                => NewClrProxy(
+                    val!, //null already process by NewUnmanagedInternal
+                    ctx
+                ) // direct convert to clr proxy for unsupported type
         };
     }
 
-    public static unsafe AutoDropJsValue New<T>(T? val, JsContext* ctx)
+    public static AutoDropJsValue NewClrProxy(object val, JsContextWrapper ctx)
     {
-        if (NewUnmanagedInternal(val, out var jsValue))
+        return ctx.NewClrInstanceObject(new ClrInstanceProxy(val, val.GetType()));
+    }
+
+    public static unsafe AutoDropJsValue NewClrProxy(object val, JsContext* ctx)
+    {
+        if (JsContextWrapper.TryGet((nint)ctx, out var ctxInstance))
         {
-            return new AutoDropJsValue(jsValue.Value, ctx);
+            return NewClrProxy(val, ctxInstance);
         }
-        return val switch
-        {
-            string s => NewString(ctx, s),
-            string[] ss => NewArray(ctx, ss),
-            byte[] cc => NewArray(ctx, cc),
-            sbyte[] sb => NewArray(ctx, sb),
-            short[] ss => NewArray(ctx, ss),
-            ushort[] us => NewArray(ctx, us),
-            int[] ii => NewArray(ctx, ii),
-            uint[] ui => NewArray(ctx, ui),
-            long[] ll => NewArray(ctx, ll),
-            ulong[] ul => NewArray(ctx, ul),
-            float[] ff => NewArray(ctx, ff),
-            double[] dd => NewArray(ctx, dd),
-            decimal[] dec => NewArray(ctx, dec),
-            _ => throw new NotImplementedException($"new {typeof(T)} is not support")
-        };
+        throw new NotImplementedException($"new {val.GetType()} is not support");
     }
 
     //    /* special values */
@@ -403,7 +420,12 @@ internal static class JsValueCreateHelper
         var array = Native.JS_NewArray(ctx);
         for (uint i = 0; i < values.Length; i++)
         {
-            Native.JS_SetPropertyUint32(ctx, array.Value, i, New(values[i], ctx).Steal());
+            Native.JS_SetPropertyUint32(
+                ctx,
+                array.Value,
+                i,
+                New(values[i], ctx, Undefined).Steal()
+            );
         }
         return array;
     }

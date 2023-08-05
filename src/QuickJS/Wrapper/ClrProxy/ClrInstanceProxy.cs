@@ -1,12 +1,11 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
+﻿using System.Reflection;
 using Hosihikari.VanillaScript.QuickJS.Extensions;
 using Hosihikari.VanillaScript.QuickJS.Helper;
 using Hosihikari.VanillaScript.QuickJS.Types;
 using Hosihikari.VanillaScript.QuickJS.Wrapper;
 using Hosihikari.VanillaScript.QuickJS.Wrapper.Reflect;
 
-namespace Hosihikari.VanillaScript.Modules.Clr;
+namespace Hosihikari.VanillaScript.QuickJS.Wrapper.ClrProxy;
 
 internal class ClrInstanceProxy : ClrInstanceProxyBase, IDisposable, IFormattable
 {
@@ -104,10 +103,10 @@ internal class ClrInstanceProxy : ClrInstanceProxyBase, IDisposable, IFormattabl
                 data.Flags |= JsPropertyFlags.HasGet;
                 data.Getter = ctxInstance
                     .NewJsFunctionObject(
-                        (_, _, argv) =>
+                        (_, thisObj, argv) =>
                         {
                             Log.Logger.Trace("get");
-                            return getHelper.Call(ctxInstance, argv).Steal();
+                            return getHelper.Call(ctxInstance, argv, thisObj).Steal();
                         }
                     )
                     .Steal();
@@ -117,10 +116,10 @@ internal class ClrInstanceProxy : ClrInstanceProxyBase, IDisposable, IFormattabl
                 data.Flags |= JsPropertyFlags.HasSet;
                 data.Setter = ctxInstance
                     .NewJsFunctionObject(
-                        (_, _, argv) =>
+                        (_, thisObj, argv) =>
                         {
                             Log.Logger.Trace("set");
-                            return setHelper.Call(ctxInstance, argv).Steal();
+                            return setHelper.Call(ctxInstance, argv, thisObj).Steal();
                         }
                     )
                     .Steal();
@@ -160,10 +159,10 @@ internal class ClrInstanceProxy : ClrInstanceProxyBase, IDisposable, IFormattabl
                     Flags = JsPropertyFlags.HasValue,
                     Value = ctxInstance
                         .NewJsFunctionObject(
-                            (_, _, argv) =>
+                            (_, thisObj, argv) =>
                             {
                                 Log.Logger.Trace("call");
-                                return helper.Call(ctxInstance, argv).Steal();
+                                return helper.Call(ctxInstance, argv, thisObj).Steal();
                             }
                         )
                         .Steal(),
@@ -177,7 +176,9 @@ internal class ClrInstanceProxy : ClrInstanceProxyBase, IDisposable, IFormattabl
                 data = new JsPropertyDescriptor
                 {
                     Flags = JsPropertyFlags.HasValue | JsPropertyFlags.Enumerable,
-                    Value = JsValueCreateHelper.New(value, ctxInstance).Steal()
+                    Value = JsValueCreateHelper
+                        .New(value, ctxInstance, JsValueCreateHelper.Undefined)
+                        .Steal()
                 };
                 return true;
             }
