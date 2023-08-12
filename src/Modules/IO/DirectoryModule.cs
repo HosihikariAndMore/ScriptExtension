@@ -14,7 +14,7 @@ internal class DirectoryModule
     {
         unsafe
         {
-            module.AddExport(
+            module.AddExportValue(
                 "directory",
                 _ =>
                 {

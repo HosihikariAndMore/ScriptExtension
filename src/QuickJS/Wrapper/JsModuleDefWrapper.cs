@@ -45,7 +45,7 @@ public ref struct JsModuleDefWrapper
         );
     }
 
-    public void AddExport(string name, JsModuleImportDelegate onImport)
+    private void AddExport(string name, JsModuleImportDelegate onImport)
     {
         unsafe
         {

@@ -36,7 +36,6 @@ public class JsContextWrapper
     private unsafe JsContextWrapper(JsContext* ctx)
     {
         Context = ctx;
-        Manager.SetupContext(this);
     }
 
     public static bool TryGet(nint ctxPtr, [NotNullWhen(true)] out JsContextWrapper? ctx)
@@ -65,6 +64,7 @@ public class JsContextWrapper
         }
         var newInstance = new JsContextWrapper(ctx);
         Manager.LoadedScriptsContext.Add(newInstance);
+        Manager.SetupContext(newInstance);
         return newInstance;
     }
 

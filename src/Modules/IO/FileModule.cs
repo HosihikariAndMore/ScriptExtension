@@ -14,7 +14,7 @@ internal static class FileModule
     {
         unsafe
         {
-            module.AddExport(
+            module.AddExportValue(
                 "file",
                 _ =>
                 {
