@@ -2,6 +2,7 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Hosihikari.VanillaScript.QuickJS.Exceptions;
+using Hosihikari.VanillaScript.QuickJS.Helper;
 using Hosihikari.VanillaScript.QuickJS.Types;
 using Hosihikari.VanillaScript.QuickJS.Wrapper;
 using Hosihikari.VanillaScript.QuickJS.Wrapper.ClrProxy;
@@ -429,6 +430,10 @@ public static class JsValueExtension
             //case JsTag.Object when Native.JS_IsArray(ctx, @this):
             //    throw new NotImplementedException("js array to clr not impl");
             case JsTag.Object:
+                if (@this.IsPromise(ctx))
+                {
+                    return JsPromiseHelper.ConvertPromiseToTask(ctx, @this);
+                }
                 if (
                     ClrProxyBase.TryGetInstance(@this, out var item)
                     && item is ClrInstanceProxy { Instance: var instance }
