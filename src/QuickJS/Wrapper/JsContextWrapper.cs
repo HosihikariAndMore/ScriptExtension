@@ -3,6 +3,8 @@ using System.Runtime.InteropServices;
 using Hosihikari.VanillaScript.Loader;
 using Hosihikari.VanillaScript.QuickJS.Helper;
 using Hosihikari.VanillaScript.QuickJS.Types;
+using Hosihikari.VanillaScript.QuickJS.Wrapper.ClrProxy;
+using Hosihikari.VanillaScript.QuickJS.Wrapper.ClrProxy.Generic;
 using static Hosihikari.VanillaScript.QuickJS.Types.JsClassDef;
 
 namespace Hosihikari.VanillaScript.QuickJS.Wrapper;

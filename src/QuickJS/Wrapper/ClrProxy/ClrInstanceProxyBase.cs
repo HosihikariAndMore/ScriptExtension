@@ -1,6 +1,6 @@
 ﻿using Hosihikari.VanillaScript.QuickJS.Types;
 
-namespace Hosihikari.VanillaScript.QuickJS.Wrapper;
+namespace Hosihikari.VanillaScript.QuickJS.Wrapper.ClrProxy;
 
 public abstract class ClrInstanceProxyBase : ClrProxyBase
 {

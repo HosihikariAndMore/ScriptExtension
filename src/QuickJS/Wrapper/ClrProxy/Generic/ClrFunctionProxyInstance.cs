@@ -1,15 +1,10 @@
 ﻿using Hosihikari.VanillaScript.QuickJS.Types;
 
-namespace Hosihikari.VanillaScript.QuickJS.Wrapper;
+namespace Hosihikari.VanillaScript.QuickJS.Wrapper.ClrProxy.Generic;
 
-public class ClrFunctionProxyInstance : ClrFunctionProxyBase
+public class ClrFunctionProxyInstance(JsNativeFunctionDelegate callback) : ClrFunctionProxyBase
 {
-    public ClrFunctionProxyInstance(JsNativeFunctionDelegate callback)
-    {
-        Callback = callback;
-    }
-
-    public JsNativeFunctionDelegate Callback;
+    public JsNativeFunctionDelegate Callback = callback;
 
     protected override JsValue Invoke(
         JsContextWrapper ctxInstance,

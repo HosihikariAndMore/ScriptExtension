@@ -5,6 +5,7 @@ using Hosihikari.VanillaScript.QuickJS.Exceptions;
 using Hosihikari.VanillaScript.QuickJS.Types;
 using Hosihikari.VanillaScript.QuickJS.Wrapper;
 using Hosihikari.VanillaScript.QuickJS.Wrapper.ClrProxy;
+using Hosihikari.VanillaScript.QuickJS.Wrapper.ClrProxy.Generic;
 
 namespace Hosihikari.VanillaScript.QuickJS.Extensions;
 

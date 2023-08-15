@@ -4,9 +4,9 @@ using System.Text.Json;
 using Hosihikari.VanillaScript.QuickJS.Extensions.Check;
 using Hosihikari.VanillaScript.QuickJS.Helper;
 using Hosihikari.VanillaScript.QuickJS.Types;
-using Hosihikari.VanillaScript.QuickJS.Wrapper.ClrProxy;
+using Hosihikari.VanillaScript.QuickJS.Wrapper.ClrProxy.Generic;
 
-namespace Hosihikari.VanillaScript.QuickJS.Wrapper;
+namespace Hosihikari.VanillaScript.QuickJS.Wrapper.ClrProxy;
 
 public abstract class ClrProxyBase
 {
@@ -247,7 +247,7 @@ public abstract class ClrProxyBase
     internal static unsafe void JsClassFinalizer(JsRuntime* rt, JsValue value)
     {
         var opaque = Native.JS_GetOpaqueWithoutClass(value);
-        if (opaque != IntPtr.Zero)
+        if (opaque != nint.Zero)
         {
             var handle = GCHandle.FromIntPtr(opaque);
             try
@@ -304,7 +304,7 @@ public abstract class ClrProxyBase
     public static bool TryGetInstance(JsValue value, [NotNullWhen(true)] out ClrProxyBase? obj)
     {
         var opaque = Native.JS_GetOpaqueWithoutClass(value);
-        if (opaque != IntPtr.Zero)
+        if (opaque != nint.Zero)
         {
             try
             {

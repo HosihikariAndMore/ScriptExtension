@@ -4,7 +4,7 @@ using Hosihikari.VanillaScript.QuickJS.Helper;
 using Hosihikari.VanillaScript.QuickJS.Types;
 using Hosihikari.VanillaScript.QuickJS.Wrapper.Reflect;
 
-namespace Hosihikari.VanillaScript.QuickJS.Wrapper.ClrProxy;
+namespace Hosihikari.VanillaScript.QuickJS.Wrapper.ClrProxy.Generic;
 
 internal class ClrInstanceProxy : ClrInstanceProxyBase, IDisposable, IFormattable
 {
