@@ -13,6 +13,8 @@ public struct JsClassId
 
     public override bool Equals(object? obj) => obj is JsClassId other && Equals(other);
 
+    public static implicit operator JsClassId(BuildIn id) => new() { Id = (uint)id };
+
     public bool Equals(JsClassId other)
     {
         return Id == other.Id;

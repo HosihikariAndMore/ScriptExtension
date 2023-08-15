@@ -1,4 +1,6 @@
 ﻿using Hosihikari.Minecraft.Extension;
+using Hosihikari.VanillaScript.QuickJS.Exceptions;
+using Hosihikari.VanillaScript.QuickJS.Extensions;
 using Hosihikari.VanillaScript.QuickJS.Types;
 using Hosihikari.VanillaScript.QuickJS.Wrapper;
 
@@ -190,5 +192,56 @@ public static class JsPromiseHelper
                 });
             }
         });
+    }
+
+    public static Task<object?> ConvertPromiseToTask(JsContextWrapper ctx, JsValue promiseInstance)
+    {
+        var tcs = new TaskCompletionSource<object?>();
+        unsafe
+        {
+            ConvertPromiseToTask(
+                ctx,
+                promiseInstance,
+                (_, _, argv) =>
+                {
+                    tcs.SetResult(argv.Length == 0 ? null : argv[0].ToClrObject(ctx));
+                    return JsValueCreateHelper.Undefined;
+                },
+                (_, _, argv) =>
+                {
+                    tcs.SetException(
+                        argv.Length == 0
+                            ? new Exception("unknown js error")
+                            : new QuickJsException(argv[0], ctx.Context)
+                    );
+                    return JsValueCreateHelper.Undefined;
+                }
+            );
+        }
+        return tcs.Task;
+    }
+
+    public static unsafe void ConvertPromiseToTask(
+        JsContextWrapper ctx,
+        JsValue promiseInstance,
+        JsNativeFunctionDelegate onResolve,
+        JsNativeFunctionDelegate onReject
+    )
+    {
+        unsafe
+        {
+            using var resolve = ctx.NewJsFunctionObject(onResolve);
+            using var reject = ctx.NewJsFunctionObject(onReject);
+            fixed (JsValue* argv = new[] { resolve.Value, reject.Value })
+            {
+                using var result = Native.JS_Invoke(
+                    ctx.Context,
+                    promiseInstance,
+                    JsAtom.BuildIn.Then,
+                    2,
+                    argv
+                );
+            }
+        }
     }
 }

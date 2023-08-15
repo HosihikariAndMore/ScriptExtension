@@ -187,6 +187,8 @@ public struct JsAtom
         //DEF(_star_, "*")
         //DEF(Module, "Module")
         //DEF(then, "then")
+        public static JsAtom Then = 127;
+
         //DEF(resolve, "resolve")
         //DEF(reject, "reject")
         //DEF(promise, "promise")

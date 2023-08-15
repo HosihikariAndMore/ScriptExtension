@@ -197,4 +197,9 @@ public class AutoDropJsValue : IDisposable
             _value.SetProperty(_context, propertyName, value);
         }
     }
+
+    public object? ToClrObject()
+    {
+        return _value.ToClrObject(Context);
+    }
 }

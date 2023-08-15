@@ -139,6 +139,18 @@ public static class JsValueTypes
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe bool IsPromise(this JsValue @this, JsContext* ctx)
+    {
+        if (@this.Tag is JsTag.Object)
+        {
+            var opaque = Native.JS_GetOpaque2(ctx, @this, JsClassId.BuildIn.JsClassPromise);
+            return opaque != nint.Zero;
+        }
+
+        return false;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe bool IsArray(this JsValue @this, JsContextWrapper ctx) =>
         IsArray(@this, ctx.Context);
 
