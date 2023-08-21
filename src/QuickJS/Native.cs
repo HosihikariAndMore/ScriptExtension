@@ -798,7 +798,7 @@ else
 #if true// get thrown exception and append clr stack after js
             if (!string.IsNullOrWhiteSpace(stack))
             {
-                var error = JS_GetException(ctx); //get error object just throw
+                using var error = JS_GetException(ctx); //get error object just throw
                 if (error.HasProperty(JsAtom.BuildIn.Stack))
                 {
                     var jsStack = error.GetStringProperty(JsAtom.BuildIn.Stack);
@@ -810,7 +810,7 @@ else
                     );
                     error.SetProperty(JsAtom.BuildIn.Stack, JS_NewString(ctx, jsStack).Steal());
                 }
-                JS_Throw(ctx, error.Value); //rethrow processed error
+                JS_Throw(ctx, error.Steal()); //rethrow processed error
             }
 #endif
             return result;
