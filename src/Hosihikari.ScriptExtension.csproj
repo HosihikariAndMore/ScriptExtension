@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net7.0</TargetFramework>
+		<TargetFramework>net8.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<LangVersion>preview</LangVersion>
@@ -10,8 +10,9 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Hosihikari.Logging" Version="1.0.0" />
-	  <PackageReference Include="Hosihikari.PluginManager" Version="1.0.1" />
+	  <PackageReference Include="Hosihikari.Logging" Version="1.0.1" />
+	  <PackageReference Include="Hosihikari.PluginManager" Version="1.0.4" />
+	  <PackageReference Include="Hosihikari.NativeInterop" Version="1.0.5" />
 	</ItemGroup>
 
 	<ItemGroup> 
@@ -20,9 +21,6 @@
 		</Reference>
 		<Reference Include="Hosihikari.Minecraft.Extension">
 		  <HintPath>..\..\Extension\src\bin\Release\net7.0\Hosihikari.Minecraft.Extension.dll</HintPath>
-		</Reference>
-		<Reference Include="Hosihikari.NativeInterop">
-			<HintPath>..\..\NativeInterop\src\bin\Release\net7.0\Hosihikari.NativeInterop.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 
