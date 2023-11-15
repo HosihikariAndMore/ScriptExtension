@@ -1,4 +1,4 @@
-﻿namespace Hosihikari.VanillaScript.QuickJS.Types;
+﻿namespace Hosihikari.ScriptExtension.QuickJS.Types;
 
 using size_t = UIntPtr;
 

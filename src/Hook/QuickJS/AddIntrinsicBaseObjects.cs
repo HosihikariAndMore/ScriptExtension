@@ -1,7 +1,7 @@
 ﻿using Hosihikari.NativeInterop.Hook.ObjectOriented;
-using Hosihikari.VanillaScript.QuickJS.Types;
+using Hosihikari.ScriptExtension.QuickJS.Types;
 
-namespace Hosihikari.VanillaScript.Hook.QuickJS;
+namespace Hosihikari.ScriptExtension.Hook.QuickJS;
 
 internal class AddIntrinsicBaseObjects : HookBase<AddIntrinsicBaseObjects.HookDelegate>
 {

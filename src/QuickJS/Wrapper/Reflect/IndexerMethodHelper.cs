@@ -1,10 +1,10 @@
 ﻿using System.Reflection;
-using Hosihikari.VanillaScript.QuickJS.Extensions;
-using Hosihikari.VanillaScript.QuickJS.Extensions.Check;
-using Hosihikari.VanillaScript.QuickJS.Helper;
-using Hosihikari.VanillaScript.QuickJS.Types;
+using Hosihikari.ScriptExtension.QuickJS.Extensions;
+using Hosihikari.ScriptExtension.QuickJS.Extensions.Check;
+using Hosihikari.ScriptExtension.QuickJS.Helper;
+using Hosihikari.ScriptExtension.QuickJS.Types;
 
-namespace Hosihikari.VanillaScript.QuickJS.Wrapper.Reflect;
+namespace Hosihikari.ScriptExtension.QuickJS.Wrapper.Reflect;
 
 public class IndexerMethodHelper : MethodHelper
 {

@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace Hosihikari.VanillaScript.Scripting.Entt;
+namespace Hosihikari.ScriptExtension.Scripting.Entt;
 
 public unsafe class MetaAny : IDisposable
 {

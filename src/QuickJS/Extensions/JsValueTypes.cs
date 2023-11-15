@@ -1,8 +1,8 @@
 ﻿using System.Runtime.CompilerServices;
-using Hosihikari.VanillaScript.QuickJS.Types;
-using Hosihikari.VanillaScript.QuickJS.Wrapper;
+using Hosihikari.ScriptExtension.QuickJS.Types;
+using Hosihikari.ScriptExtension.QuickJS.Wrapper;
 
-namespace Hosihikari.VanillaScript.QuickJS.Extensions;
+namespace Hosihikari.ScriptExtension.QuickJS.Extensions;
 
 //ref #L556
 public static class JsValueTypes

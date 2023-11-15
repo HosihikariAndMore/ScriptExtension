@@ -1,6 +1,6 @@
-﻿using Hosihikari.VanillaScript.QuickJS.Wrapper;
+﻿using Hosihikari.ScriptExtension.QuickJS.Wrapper;
 
-namespace Hosihikari.VanillaScript.Loader;
+namespace Hosihikari.ScriptExtension.Loader;
 
 public static partial class Manager
 {

@@ -1,13 +1,13 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
-using Hosihikari.VanillaScript.Loader;
-using Hosihikari.VanillaScript.QuickJS.Helper;
-using Hosihikari.VanillaScript.QuickJS.Types;
-using Hosihikari.VanillaScript.QuickJS.Wrapper.ClrProxy;
-using Hosihikari.VanillaScript.QuickJS.Wrapper.ClrProxy.Generic;
-using static Hosihikari.VanillaScript.QuickJS.Types.JsClassDef;
+using Hosihikari.ScriptExtension.Loader;
+using Hosihikari.ScriptExtension.QuickJS.Helper;
+using Hosihikari.ScriptExtension.QuickJS.Types;
+using Hosihikari.ScriptExtension.QuickJS.Wrapper.ClrProxy;
+using Hosihikari.ScriptExtension.QuickJS.Wrapper.ClrProxy.Generic;
+using static Hosihikari.ScriptExtension.QuickJS.Types.JsClassDef;
 
-namespace Hosihikari.VanillaScript.QuickJS.Wrapper;
+namespace Hosihikari.ScriptExtension.QuickJS.Wrapper;
 
 public class JsContextWrapper
 {

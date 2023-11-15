@@ -1,8 +1,8 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
-using Hosihikari.VanillaScript.Scripting.Entt;
+using Hosihikari.ScriptExtension.Scripting.Entt;
 
-namespace Hosihikari.VanillaScript.Scripting.Std;
+namespace Hosihikari.ScriptExtension.Scripting.Std;
 
 /// <summary>
 /// std::variant&lt;entt::meta_any,JSValue&gt;

@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace Hosihikari.VanillaScript.QuickJS.Types;
+namespace Hosihikari.ScriptExtension.QuickJS.Types;
 
 [StructLayout(LayoutKind.Explicit, Size = 16 * 3 + 8)]
 public ref struct JsPropertyDescriptor

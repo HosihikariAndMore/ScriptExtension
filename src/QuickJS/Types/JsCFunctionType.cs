@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace Hosihikari.VanillaScript.QuickJS.Types
+namespace Hosihikari.ScriptExtension.QuickJS.Types
 {
     //ref #L925
     [StructLayout(LayoutKind.Explicit)]

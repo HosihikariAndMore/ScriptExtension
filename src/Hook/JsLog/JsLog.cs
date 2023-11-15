@@ -1,14 +1,14 @@
 ﻿using System.Runtime.InteropServices;
 using System.Text;
 using Hosihikari.Logging;
-using Hosihikari.VanillaScript.Assets;
-using Hosihikari.VanillaScript.QuickJS;
-using Hosihikari.VanillaScript.QuickJS.Extensions;
-using Hosihikari.VanillaScript.QuickJS.Helper;
-using Hosihikari.VanillaScript.QuickJS.Types;
-using Hosihikari.VanillaScript.Scripting;
+using Hosihikari.ScriptExtension.Assets;
+using Hosihikari.ScriptExtension.QuickJS;
+using Hosihikari.ScriptExtension.QuickJS.Extensions;
+using Hosihikari.ScriptExtension.QuickJS.Helper;
+using Hosihikari.ScriptExtension.QuickJS.Types;
+using Hosihikari.ScriptExtension.Scripting;
 
-namespace Hosihikari.VanillaScript.Hook.JsLog;
+namespace Hosihikari.ScriptExtension.Hook.JsLog;
 
 internal class JsLog
 {

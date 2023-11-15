@@ -1,14 +1,14 @@
 ﻿using System.ComponentModel;
-using Hosihikari.VanillaScript.QuickJS.Extensions;
-using Hosihikari.VanillaScript.QuickJS.Extensions.Check;
-using Hosihikari.VanillaScript.QuickJS.Helper;
-using Hosihikari.VanillaScript.QuickJS.Types;
-using Hosihikari.VanillaScript.QuickJS.Wrapper;
-using Hosihikari.VanillaScript.QuickJS.Wrapper.ClrProxy;
-using Hosihikari.VanillaScript.QuickJS.Wrapper.ClrProxy.Generic;
-using Hosihikari.VanillaScript.QuickJS.Wrapper.Reflect;
+using Hosihikari.ScriptExtension.QuickJS.Extensions;
+using Hosihikari.ScriptExtension.QuickJS.Extensions.Check;
+using Hosihikari.ScriptExtension.QuickJS.Helper;
+using Hosihikari.ScriptExtension.QuickJS.Types;
+using Hosihikari.ScriptExtension.QuickJS.Wrapper;
+using Hosihikari.ScriptExtension.QuickJS.Wrapper.ClrProxy;
+using Hosihikari.ScriptExtension.QuickJS.Wrapper.ClrProxy.Generic;
+using Hosihikari.ScriptExtension.QuickJS.Wrapper.Reflect;
 
-namespace Hosihikari.VanillaScript.Modules.Clr;
+namespace Hosihikari.ScriptExtension.Modules.Clr;
 
 internal class Main
 {

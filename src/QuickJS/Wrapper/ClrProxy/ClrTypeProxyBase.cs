@@ -1,4 +1,4 @@
-﻿namespace Hosihikari.VanillaScript.QuickJS.Wrapper.ClrProxy;
+﻿namespace Hosihikari.ScriptExtension.QuickJS.Wrapper.ClrProxy;
 
 public abstract class ClrTypeProxyBase : ClrInstanceProxyBase
 {

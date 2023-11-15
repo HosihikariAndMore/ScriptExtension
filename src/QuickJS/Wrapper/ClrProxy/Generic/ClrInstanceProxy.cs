@@ -1,10 +1,10 @@
 ﻿using System.Reflection;
-using Hosihikari.VanillaScript.QuickJS.Extensions;
-using Hosihikari.VanillaScript.QuickJS.Helper;
-using Hosihikari.VanillaScript.QuickJS.Types;
-using Hosihikari.VanillaScript.QuickJS.Wrapper.Reflect;
+using Hosihikari.ScriptExtension.QuickJS.Extensions;
+using Hosihikari.ScriptExtension.QuickJS.Helper;
+using Hosihikari.ScriptExtension.QuickJS.Types;
+using Hosihikari.ScriptExtension.QuickJS.Wrapper.Reflect;
 
-namespace Hosihikari.VanillaScript.QuickJS.Wrapper.ClrProxy.Generic;
+namespace Hosihikari.ScriptExtension.QuickJS.Wrapper.ClrProxy.Generic;
 
 internal class ClrInstanceProxy : ClrInstanceProxyBase, IDisposable, IFormattable
 {

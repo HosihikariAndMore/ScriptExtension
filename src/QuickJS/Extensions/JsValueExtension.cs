@@ -1,14 +1,14 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Hosihikari.VanillaScript.QuickJS.Exceptions;
-using Hosihikari.VanillaScript.QuickJS.Helper;
-using Hosihikari.VanillaScript.QuickJS.Types;
-using Hosihikari.VanillaScript.QuickJS.Wrapper;
-using Hosihikari.VanillaScript.QuickJS.Wrapper.ClrProxy;
-using Hosihikari.VanillaScript.QuickJS.Wrapper.ClrProxy.Generic;
+using Hosihikari.ScriptExtension.QuickJS.Exceptions;
+using Hosihikari.ScriptExtension.QuickJS.Helper;
+using Hosihikari.ScriptExtension.QuickJS.Types;
+using Hosihikari.ScriptExtension.QuickJS.Wrapper;
+using Hosihikari.ScriptExtension.QuickJS.Wrapper.ClrProxy;
+using Hosihikari.ScriptExtension.QuickJS.Wrapper.ClrProxy.Generic;
 
-namespace Hosihikari.VanillaScript.QuickJS.Extensions;
+namespace Hosihikari.ScriptExtension.QuickJS.Extensions;
 
 public static class JsValueExtension
 {

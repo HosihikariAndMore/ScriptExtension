@@ -1,6 +1,6 @@
-﻿using Hosihikari.VanillaScript.QuickJS.Wrapper;
+﻿using Hosihikari.ScriptExtension.QuickJS.Wrapper;
 
-namespace Hosihikari.VanillaScript.Modules.IO;
+namespace Hosihikari.ScriptExtension.Modules.IO;
 
 internal class Main
 {

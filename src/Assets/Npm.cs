@@ -1,4 +1,4 @@
-﻿namespace Hosihikari.VanillaScript.Assets;
+﻿namespace Hosihikari.ScriptExtension.Assets;
 
 internal static class Npm
 {

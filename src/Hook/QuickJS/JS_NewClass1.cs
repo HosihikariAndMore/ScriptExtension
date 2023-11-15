@@ -1,8 +1,8 @@
 ﻿using Hosihikari.NativeInterop.Hook.ObjectOriented;
-using Hosihikari.VanillaScript.QuickJS.Types;
-using Hosihikari.VanillaScript.QuickJS.Wrapper;
+using Hosihikari.ScriptExtension.QuickJS.Types;
+using Hosihikari.ScriptExtension.QuickJS.Wrapper;
 
-namespace Hosihikari.VanillaScript.Hook.QuickJS;
+namespace Hosihikari.ScriptExtension.Hook.QuickJS;
 
 internal class JsNewClass1 : HookBase<JsNewClass1.HookDelegate>
 {

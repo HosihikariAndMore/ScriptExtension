@@ -1,7 +1,7 @@
 ﻿using Hosihikari.NativeInterop.Hook.ObjectOriented;
 using System.Runtime.InteropServices;
 
-namespace Hosihikari.VanillaScript.Hook;
+namespace Hosihikari.ScriptExtension.Hook;
 
 //force enable scripting
 internal class EnableScriptingHook : HookBase<EnableScriptingHook.HookDelegate>

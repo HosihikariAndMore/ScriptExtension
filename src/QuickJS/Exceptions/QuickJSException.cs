@@ -1,8 +1,8 @@
-﻿using Hosihikari.VanillaScript.QuickJS.Extensions;
-using Hosihikari.VanillaScript.QuickJS.Types;
-using Hosihikari.VanillaScript.QuickJS.Wrapper;
+﻿using Hosihikari.ScriptExtension.QuickJS.Extensions;
+using Hosihikari.ScriptExtension.QuickJS.Types;
+using Hosihikari.ScriptExtension.QuickJS.Wrapper;
 
-namespace Hosihikari.VanillaScript.QuickJS.Exceptions;
+namespace Hosihikari.ScriptExtension.QuickJS.Exceptions;
 
 public class QuickJsException : Exception
 {

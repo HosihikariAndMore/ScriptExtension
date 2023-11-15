@@ -1,4 +1,4 @@
-﻿namespace Hosihikari.VanillaScript.Scripting.ScriptModuleMinecraft;
+﻿namespace Hosihikari.ScriptExtension.Scripting.ScriptModuleMinecraft;
 
 public abstract class ScriptObjectBase
 {

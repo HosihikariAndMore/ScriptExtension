@@ -1,4 +1,4 @@
-﻿namespace Hosihikari.VanillaScript.QuickJS.Types;
+﻿namespace Hosihikari.ScriptExtension.QuickJS.Types;
 
 /// <summary>
 /// JS_PROP_* flags for object properties.

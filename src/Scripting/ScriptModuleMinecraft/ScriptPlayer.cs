@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Hosihikari.Minecraft;
 
-namespace Hosihikari.VanillaScript.Scripting.ScriptModuleMinecraft;
+namespace Hosihikari.ScriptExtension.Scripting.ScriptModuleMinecraft;
 
 public class ScriptPlayer : ScriptObjectBase
 {

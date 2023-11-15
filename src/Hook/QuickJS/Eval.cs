@@ -1,11 +1,11 @@
 ﻿using Hosihikari.NativeInterop.Hook.ObjectOriented;
 using System.Text;
 using Hosihikari.NativeInterop.Utils;
-using Hosihikari.VanillaScript.Assets;
-using Hosihikari.VanillaScript.QuickJS.Types;
+using Hosihikari.ScriptExtension.Assets;
+using Hosihikari.ScriptExtension.QuickJS.Types;
 using System.Runtime.InteropServices;
 
-namespace Hosihikari.VanillaScript.Hook.QuickJS;
+namespace Hosihikari.ScriptExtension.Hook.QuickJS;
 
 //ref https://github.com/bellard/quickjs/blob/master/quickjs.c#L33730
 internal class Eval : HookBase<Eval.HookDelegate>

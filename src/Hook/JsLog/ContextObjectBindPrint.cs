@@ -1,8 +1,8 @@
 ﻿using Hosihikari.NativeInterop.Hook.ObjectOriented;
-using Hosihikari.VanillaScript.QuickJS;
-using Hosihikari.VanillaScript.QuickJS.Types;
+using Hosihikari.ScriptExtension.QuickJS;
+using Hosihikari.ScriptExtension.QuickJS.Types;
 
-namespace Hosihikari.VanillaScript.Hook.JsLog;
+namespace Hosihikari.ScriptExtension.Hook.JsLog;
 
 internal class ContextObjectBindPrint : HookBase<ContextObjectBindPrint.HookDelegate>
 {

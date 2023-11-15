@@ -1,6 +1,6 @@
-﻿using Hosihikari.VanillaScript.QuickJS.Types;
+﻿using Hosihikari.ScriptExtension.QuickJS.Types;
 
-namespace Hosihikari.VanillaScript.QuickJS.Wrapper;
+namespace Hosihikari.ScriptExtension.QuickJS.Wrapper;
 
 public ref struct JsModuleDefWrapper
 {

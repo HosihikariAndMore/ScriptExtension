@@ -1,8 +1,8 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Hosihikari.NativeInterop;
-using Hosihikari.VanillaScript.Scripting.ScriptModuleMinecraft;
+using Hosihikari.ScriptExtension.Scripting.ScriptModuleMinecraft;
 
-namespace Hosihikari.VanillaScript.Scripting.Entt;
+namespace Hosihikari.ScriptExtension.Scripting.Entt;
 
 internal static class MetaAnyExtension
 {

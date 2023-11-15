@@ -1,7 +1,7 @@
-﻿using Hosihikari.VanillaScript.QuickJS.Types;
-using Hosihikari.VanillaScript.QuickJS.Wrapper;
+﻿using Hosihikari.ScriptExtension.QuickJS.Types;
+using Hosihikari.ScriptExtension.QuickJS.Wrapper;
 
-namespace Hosihikari.VanillaScript.QuickJS.Extensions.Check;
+namespace Hosihikari.ScriptExtension.QuickJS.Extensions.Check;
 
 public static class ArgumentCheckExtension
 {

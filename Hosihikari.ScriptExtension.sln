@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.6.33829.357
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hosihikari.VanillaScript", "src\Hosihikari.VanillaScript.csproj", "{C0BFA38F-2015-4081-9B08-02A45D5690E6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hosihikari.ScriptExtension", "src\Hosihikari.ScriptExtension.csproj", "{C0BFA38F-2015-4081-9B08-02A45D5690E6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

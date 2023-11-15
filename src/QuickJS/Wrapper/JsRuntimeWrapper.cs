@@ -1,10 +1,10 @@
-﻿using Hosihikari.VanillaScript.QuickJS.Types;
+﻿using Hosihikari.ScriptExtension.QuickJS.Types;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using Hosihikari.NativeInterop.Utils;
-using Hosihikari.VanillaScript.Loader;
+using Hosihikari.ScriptExtension.Loader;
 
-namespace Hosihikari.VanillaScript.QuickJS.Wrapper;
+namespace Hosihikari.ScriptExtension.QuickJS.Wrapper;
 
 public class JsRuntimeWrapper
 {

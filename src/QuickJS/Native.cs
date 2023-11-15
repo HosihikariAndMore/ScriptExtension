@@ -2,14 +2,14 @@
 using System.Runtime.InteropServices;
 using Hosihikari.NativeInterop;
 using Hosihikari.NativeInterop.Utils;
-using Hosihikari.VanillaScript.QuickJS.Exceptions;
-using Hosihikari.VanillaScript.QuickJS.Extensions;
-using Hosihikari.VanillaScript.QuickJS.Helper;
-using Hosihikari.VanillaScript.QuickJS.Types;
-using Hosihikari.VanillaScript.QuickJS.Wrapper;
+using Hosihikari.ScriptExtension.QuickJS.Exceptions;
+using Hosihikari.ScriptExtension.QuickJS.Extensions;
+using Hosihikari.ScriptExtension.QuickJS.Helper;
+using Hosihikari.ScriptExtension.QuickJS.Types;
+using Hosihikari.ScriptExtension.QuickJS.Wrapper;
 using size_t = nuint;
 
-namespace Hosihikari.VanillaScript.QuickJS;
+namespace Hosihikari.ScriptExtension.QuickJS;
 
 internal static unsafe class Native
 {

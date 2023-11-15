@@ -1,8 +1,8 @@
-﻿using Hosihikari.VanillaScript.QuickJS.Types;
+﻿using Hosihikari.ScriptExtension.QuickJS.Types;
 using System.Runtime.CompilerServices;
-using Hosihikari.VanillaScript.QuickJS.Extensions;
+using Hosihikari.ScriptExtension.QuickJS.Extensions;
 
-namespace Hosihikari.VanillaScript.QuickJS.Wrapper;
+namespace Hosihikari.ScriptExtension.QuickJS.Wrapper;
 
 public class AutoDropJsAtom : IDisposable
 {

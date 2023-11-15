@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Hosihikari.VanillaScript;
+namespace Hosihikari.ScriptExtension;
 
 internal static class Config
 {
@@ -40,7 +40,7 @@ internal static class Config
         get
         {
             var configDirectory = new DirectoryInfo(
-                Path.GetFullPath(Path.Combine("config", nameof(VanillaScript)))
+                Path.GetFullPath(Path.Combine("config", nameof(ScriptExtension)))
             );
             if (!configDirectory.Exists)
                 configDirectory.Create();

@@ -1,8 +1,8 @@
 ﻿using System.Collections;
 using System.Diagnostics;
-using Hosihikari.VanillaScript.QuickJS.Wrapper;
+using Hosihikari.ScriptExtension.QuickJS.Wrapper;
 
-namespace Hosihikari.VanillaScript.Loader;
+namespace Hosihikari.ScriptExtension.Loader;
 
 public class ScriptLoadRequestEventArgs : EventArgs, IEnumerable<string>
 {

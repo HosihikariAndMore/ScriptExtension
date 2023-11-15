@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace Hosihikari.VanillaScript.QuickJS.Types;
+namespace Hosihikari.ScriptExtension.QuickJS.Types;
 
 /// <summary>
 ///header for GC objects. GC objects are C data structures with a reference count that can reference other GC objects.JS Objects are a particular type of GC object.

@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
-namespace Hosihikari.VanillaScript.QuickJS.Wrapper.Reflect;
+namespace Hosihikari.ScriptExtension.QuickJS.Wrapper.Reflect;
 
 public class TypeConstructorFinder
 {

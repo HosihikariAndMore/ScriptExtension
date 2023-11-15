@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace Hosihikari.VanillaScript.QuickJS.Types;
+namespace Hosihikari.ScriptExtension.QuickJS.Types;
 
 [StructLayout(LayoutKind.Sequential, Size = sizeof(uint))]
 public struct JsAtom

@@ -1,13 +1,13 @@
 ﻿using Hosihikari.Logging;
 
-namespace Hosihikari.VanillaScript;
+namespace Hosihikari.ScriptExtension;
 
 internal static class Log
 {
     private static readonly Lazy<Logger> _logger =
         new(() =>
         {
-            var instance = new Logger(nameof(VanillaScript));
+            var instance = new Logger(nameof(ScriptExtension));
             instance.SetupConsole();
             return instance;
         });

@@ -1,4 +1,4 @@
-﻿namespace Hosihikari.VanillaScript.Scripting.Entt;
+﻿namespace Hosihikari.ScriptExtension.Scripting.Entt;
 
 //entt::resolve<ScriptModuleMinecraft::*
 public static unsafe class Resolve

@@ -1,6 +1,6 @@
-﻿using Hosihikari.VanillaScript.QuickJS.Wrapper;
+﻿using Hosihikari.ScriptExtension.QuickJS.Wrapper;
 
-namespace Hosihikari.VanillaScript.Loader;
+namespace Hosihikari.ScriptExtension.Loader;
 
 /// <summary>
 /// add js module to JsContext

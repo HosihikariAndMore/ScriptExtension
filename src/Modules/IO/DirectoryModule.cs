@@ -1,12 +1,12 @@
 ﻿#define JsPromise
 using System.Runtime.InteropServices;
-using Hosihikari.VanillaScript.QuickJS;
-using Hosihikari.VanillaScript.QuickJS.Extensions.Check;
-using Hosihikari.VanillaScript.QuickJS.Helper;
-using Hosihikari.VanillaScript.QuickJS.Types;
-using Hosihikari.VanillaScript.QuickJS.Wrapper;
+using Hosihikari.ScriptExtension.QuickJS;
+using Hosihikari.ScriptExtension.QuickJS.Extensions.Check;
+using Hosihikari.ScriptExtension.QuickJS.Helper;
+using Hosihikari.ScriptExtension.QuickJS.Types;
+using Hosihikari.ScriptExtension.QuickJS.Wrapper;
 
-namespace Hosihikari.VanillaScript.Modules.IO;
+namespace Hosihikari.ScriptExtension.Modules.IO;
 
 internal class DirectoryModule
 {

@@ -1,4 +1,4 @@
-﻿namespace Hosihikari.VanillaScript.QuickJS.Types;
+﻿namespace Hosihikari.ScriptExtension.QuickJS.Types;
 
 //ref #L995
 public enum JsDefType : byte

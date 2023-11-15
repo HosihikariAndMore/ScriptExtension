@@ -1,12 +1,12 @@
-﻿//using Hosihikari.VanillaScript.QuickJS.Extensions;
-//using Hosihikari.VanillaScript.QuickJS.Types;
+﻿//using Hosihikari.ScriptExtension.QuickJS.Extensions;
+//using Hosihikari.ScriptExtension.QuickJS.Types;
 
-//namespace Hosihikari.VanillaScript.QuickJS.Wrapper;
+//namespace Hosihikari.ScriptExtension.QuickJS.Wrapper;
 
-using Hosihikari.VanillaScript.QuickJS.Extensions;
-using Hosihikari.VanillaScript.QuickJS.Types;
+using Hosihikari.ScriptExtension.QuickJS.Extensions;
+using Hosihikari.ScriptExtension.QuickJS.Types;
 
-namespace Hosihikari.VanillaScript.QuickJS.Wrapper;
+namespace Hosihikari.ScriptExtension.QuickJS.Wrapper;
 
 public class SafeJsValue
 {

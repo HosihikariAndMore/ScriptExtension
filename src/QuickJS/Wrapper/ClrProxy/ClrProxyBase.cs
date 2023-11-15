@@ -1,12 +1,12 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Text.Json;
-using Hosihikari.VanillaScript.QuickJS.Extensions.Check;
-using Hosihikari.VanillaScript.QuickJS.Helper;
-using Hosihikari.VanillaScript.QuickJS.Types;
-using Hosihikari.VanillaScript.QuickJS.Wrapper.ClrProxy.Generic;
+using Hosihikari.ScriptExtension.QuickJS.Extensions.Check;
+using Hosihikari.ScriptExtension.QuickJS.Helper;
+using Hosihikari.ScriptExtension.QuickJS.Types;
+using Hosihikari.ScriptExtension.QuickJS.Wrapper.ClrProxy.Generic;
 
-namespace Hosihikari.VanillaScript.QuickJS.Wrapper.ClrProxy;
+namespace Hosihikari.ScriptExtension.QuickJS.Wrapper.ClrProxy;
 
 public abstract class ClrProxyBase
 {

@@ -1,11 +1,11 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using Hosihikari.VanillaScript.QuickJS.Types;
-using Hosihikari.VanillaScript.QuickJS.Wrapper;
-using Hosihikari.VanillaScript.QuickJS.Wrapper.ClrProxy.Generic;
+using Hosihikari.ScriptExtension.QuickJS.Types;
+using Hosihikari.ScriptExtension.QuickJS.Wrapper;
+using Hosihikari.ScriptExtension.QuickJS.Wrapper.ClrProxy.Generic;
 
-namespace Hosihikari.VanillaScript.QuickJS.Helper;
+namespace Hosihikari.ScriptExtension.QuickJS.Helper;
 
 //ref #L505
 internal static class JsValueCreateHelper

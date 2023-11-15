@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace Hosihikari.VanillaScript.QuickJS.Types;
+namespace Hosihikari.ScriptExtension.QuickJS.Types;
 
 //ref https://github.com/bellard/quickjs/blob/master/quickjs.c#L197
 /*

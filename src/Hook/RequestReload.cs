@@ -1,6 +1,6 @@
 ﻿using Hosihikari.NativeInterop.Hook.ObjectOriented;
 
-namespace Hosihikari.VanillaScript.Hook
+namespace Hosihikari.ScriptExtension.Hook
 {
     internal class RequestReload : HookBase<RequestReload.HookDelegate>
     {

@@ -1,10 +1,10 @@
 ﻿using Hosihikari.PluginManager;
-using Hosihikari.VanillaScript;
-using Hosihikari.VanillaScript.Hook;
+using Hosihikari.ScriptExtension;
+using Hosihikari.ScriptExtension.Hook;
 
 [assembly: EntryPoint<Main>]
 
-namespace Hosihikari.VanillaScript;
+namespace Hosihikari.ScriptExtension;
 
 public class Main : IEntryPoint
 {

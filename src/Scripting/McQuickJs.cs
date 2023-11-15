@@ -1,12 +1,12 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Hosihikari.Minecraft;
 using Hosihikari.NativeInterop;
-using Hosihikari.VanillaScript.QuickJS.Types;
-using Hosihikari.VanillaScript.Scripting.Entt;
-using Hosihikari.VanillaScript.Scripting.ScriptModuleMinecraft;
-using Hosihikari.VanillaScript.Scripting.Std;
+using Hosihikari.ScriptExtension.QuickJS.Types;
+using Hosihikari.ScriptExtension.Scripting.Entt;
+using Hosihikari.ScriptExtension.Scripting.ScriptModuleMinecraft;
+using Hosihikari.ScriptExtension.Scripting.Std;
 
-namespace Hosihikari.VanillaScript.Scripting;
+namespace Hosihikari.ScriptExtension.Scripting;
 
 public static unsafe class McQuickJs
 {

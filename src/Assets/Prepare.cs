@@ -1,18 +1,18 @@
 ﻿using System.Text.Json.Nodes;
 using Hosihikari.Minecraft.Extension.PackHelper;
 
-namespace Hosihikari.VanillaScript.Assets;
+namespace Hosihikari.ScriptExtension.Assets;
 
 internal static class Prepare
 {
     public static string EntryPointJsName = "entry_point_" + Guid.NewGuid().ToString("N") + ".js";
-    public const string SuccessScriptContent = $"console.log('{nameof(VanillaScript)} Loaded !');";
+    public const string SuccessScriptContent = $"console.log('{nameof(ScriptExtension)} Loaded !');";
     public const string FailedScriptContent =
-        $"console.error('{nameof(VanillaScript)} Load Failed !');";
+        $"console.error('{nameof(ScriptExtension)} Load Failed !');";
 
     internal static void Init()
     {
-        var pack = Path.GetFullPath(Path.Combine("config", nameof(VanillaScript), "pack"));
+        var pack = Path.GetFullPath(Path.Combine("config", nameof(ScriptExtension), "pack"));
         var manifest = Path.Combine(pack, "manifest.json");
         var scripts = Path.Combine(pack, "scripts");
         if (!Directory.Exists(pack))

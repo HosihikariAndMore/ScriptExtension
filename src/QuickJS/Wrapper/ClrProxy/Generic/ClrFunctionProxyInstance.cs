@@ -1,6 +1,6 @@
-﻿using Hosihikari.VanillaScript.QuickJS.Types;
+﻿using Hosihikari.ScriptExtension.QuickJS.Types;
 
-namespace Hosihikari.VanillaScript.QuickJS.Wrapper.ClrProxy.Generic;
+namespace Hosihikari.ScriptExtension.QuickJS.Wrapper.ClrProxy.Generic;
 
 public class ClrFunctionProxyInstance(JsNativeFunctionDelegate callback) : ClrFunctionProxyBase
 {
