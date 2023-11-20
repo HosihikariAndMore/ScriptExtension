@@ -1,6 +1,5 @@
 ﻿using System.Runtime.InteropServices;
 using System.Text;
-using Hosihikari.Logging;
 using Hosihikari.ScriptExtension.Assets;
 using Hosihikari.ScriptExtension.QuickJS;
 using Hosihikari.ScriptExtension.QuickJS.Extensions;

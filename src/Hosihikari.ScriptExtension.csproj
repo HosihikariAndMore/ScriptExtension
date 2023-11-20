@@ -10,17 +10,17 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Hosihikari.Logging" Version="1.0.1" />
 	  <PackageReference Include="Hosihikari.PluginManager" Version="1.0.4" />
 	  <PackageReference Include="Hosihikari.NativeInterop" Version="1.0.5" />
+	  <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" />
 	</ItemGroup>
 
 	<ItemGroup> 
 		<Reference Include="Hosihikari.Minecraft">
-		  <HintPath>..\..\Minecraft\src\bin\Release\net7.0\Hosihikari.Minecraft.dll</HintPath>
+		  <HintPath>..\..\Minecraft\src\bin\Release\net8.0\Hosihikari.Minecraft.dll</HintPath>
 		</Reference>
 		<Reference Include="Hosihikari.Minecraft.Extension">
-		  <HintPath>..\..\Extension\src\bin\Release\net7.0\Hosihikari.Minecraft.Extension.dll</HintPath>
+		  <HintPath>..\..\Extension\src\bin\Release\net8.0\Hosihikari.Minecraft.Extension.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 

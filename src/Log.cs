@@ -1,6 +1,4 @@
-﻿using Hosihikari.Logging;
-
-namespace Hosihikari.ScriptExtension;
+﻿namespace Hosihikari.ScriptExtension;
 
 internal static class Log
 {
